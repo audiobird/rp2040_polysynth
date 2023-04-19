@@ -1,0 +1,1 @@
+[{"node":"DMA.CH0_CTRL_TRIG","expanded":true,"format":0},{"node":"SPI0","expanded":true,"format":0,"pinned":false},{"node":"SPI0.SSPCR0","expanded":true,"format":0},{"node":"SPI0.SSPDR","expanded":true,"format":0},{"node":"SPI0.SSPSR","expanded":true,"format":0},{"node":"SPI1.SSPDR","expanded":true,"format":0}]
