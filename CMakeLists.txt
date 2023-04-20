@@ -33,6 +33,11 @@ src/mcp4921.c
 src/adsr.c
 src/phasor.c 
 src/sine_osc.c
+src/vca.c
+src/operator.c 
+include/operator.h
+include/signal.h
+include/vca.h
 include/common.h
 include/sine_osc.h
 include/phasor.h
@@ -90,6 +95,9 @@ SAMPLE_BUFFER_SIZE=${SAMPLE_BUFFER_SIZE}
 PHASE_STEP_TABLE_BIT_SIZE=${PHASE_STEP_TABLE_BIT_SIZE}
 SYNTH_NUM_VOICES=4
 SYNTH_OPERATORS_PER_VOICE=4
+#DIVIDE_FAST_SHIFT
+#DIVIDE_FAST_ADJUSTED
+DIVIDE_ACCURATE
 )
 
 add_custom_target(

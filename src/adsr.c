@@ -8,24 +8,24 @@ uint16_t adsr_midi_to_rate(uint8_t mval)
     return log_table_get(127 - mval) + 1;
 }
 
-void adsr_set_attack(adsr_t * x, uint8_t m_val)
+void adsr_params_set_attack(adsr_params_t * x, uint8_t m_val)
 {
-    x->attack = adsr_midi_to_rate(m_val);
+    x->attack = m_val;
 }
 
-void adsr_set_decay(adsr_t * x, uint8_t m_val)
+void adsr_params_set_decay(adsr_params_t * x, uint8_t m_val)
 {
-    x->decay = adsr_midi_to_rate(m_val);
+    x->decay = m_val;
 }
 
-void adsr_set_sustain(adsr_t * x, uint8_t m_val)
+void adsr_params_set_sustain(adsr_params_t * x, uint8_t m_val)
 {
-    x->sustain = adsr_midi_to_rate(m_val);
+    x->sustain = m_val;
 }
 
-void adsr_set_release(adsr_t * x, uint8_t m_val)
+void adsr_params_set_release(adsr_params_t * x, uint8_t m_val)
 {
-    x->release = adsr_midi_to_rate(m_val);
+    x->release = m_val;
 }
 
 void adsr_process(adsr_t * x)
@@ -35,11 +35,14 @@ void adsr_process(adsr_t * x)
     if (!x->trig)
     x->state = ADSR_RELEASE;
 
+    int rate;
+
     switch (x->state)
     {
         case ADSR_ATTACK:
         {
-            temp += x->attack;
+            rate = adsr_midi_to_rate(x->params->attack);
+            temp += rate;
 
             if (temp > UINT16_MAX)
             {
@@ -51,23 +54,24 @@ void adsr_process(adsr_t * x)
         }
         case ADSR_DECAY:
         {
-            temp -= x->decay;
+            rate = adsr_midi_to_rate(x->params->decay);
+            temp -= rate;
 
-            if (temp < x->sustain)
+            if (temp < adsr_midi_to_rate(x->params->sustain))
             {
-                temp = x->sustain;
+                temp = adsr_midi_to_rate(x->params->sustain);
                 x->state = ADSR_SUSTAIN;
             }
             
             break;
         }
         case ADSR_SUSTAIN: 
-            temp = x->sustain; 
+            temp = adsr_midi_to_rate(x->params->sustain); 
             break;
 
         case ADSR_RELEASE:
         {
-            temp -= x->release;
+            temp -= adsr_midi_to_rate(x->params->release);
 
             if (temp < 0)
             temp = 0;
@@ -92,7 +96,18 @@ bool adsr_is_open(adsr_t * x)
     return x->out_val > 0;
 }
 
-uint16_t adsr_get_output(adsr_t * x)
+void adsr_reset_hard(adsr_t * x)
+{
+    x->out_val = 0;
+    x->state = ADSR_ATTACK;
+}
+
+int32_t adsr_get_output(adsr_t * x)
 {
     return x->out_val;
+}
+
+void adsr_params_attach(adsr_t * adsr, adsr_params_t * params)
+{
+    adsr->params = params;
 }
