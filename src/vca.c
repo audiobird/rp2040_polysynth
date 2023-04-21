@@ -15,7 +15,7 @@ void vca_process(vca_t * vca)
 {
     int32_t x = *vca->params->a_in;
     x = multiply_and_scale(x, vca->params->gain, 7);
-    vca->a_out = multiply_and_scale(x, *vca->params->cv_in, 15);
+    vca->a_out = x;//multiply_and_scale(x, *vca->params->cv_in, 15);
 }
 
 void vca_params_attach(vca_t * vca, vca_params_t * params)

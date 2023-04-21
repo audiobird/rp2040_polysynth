@@ -4,6 +4,7 @@
 #include <pico/stdio.h>
 #include "phasor.h"
 #include "signal.h"
+#include "trig_gate.h"
 
 typedef struct sine_osc_params
 {
@@ -17,6 +18,7 @@ typedef struct sine_osc_params
 typedef struct sin_osc
 {
     phasor_t phasor;
+    trig_t trig;
     sine_osc_params_t * params;
     audio_output_t a_out;
 } sine_osc_t;
@@ -29,6 +31,8 @@ void sine_osc_params_attach_audio_input(sine_osc_params_t * o, audio_output_t * 
 void sine_osc_params_attach(sine_osc_t * o, sine_osc_params_t * p);
 
 void sine_osc_process(sine_osc_t * o);
+void sine_osc_process_params(sine_osc_t * o, int8_t midi_note);
 void sine_osc_set_pitch(sine_osc_t * o, int8_t octave, int16_t semitone, int16_t fine_tune);
 audio_output_t * sine_osc_get_output(sine_osc_t * o);
+void sine_osc_attach_gate(sine_osc_t * o, gate_t * gate);
 #endif

@@ -35,6 +35,15 @@ src/phasor.c
 src/sine_osc.c
 src/vca.c
 src/operator.c 
+src/voice.c
+src/bit_crusher.c
+src/rate_reducer.c
+src/bus.c
+include/trig_gate.h
+include/bus.h
+include/rate_reducer.h
+include/bit_crusher.h
+include/voice.h
 include/operator.h
 include/signal.h
 include/vca.h
@@ -95,9 +104,9 @@ SAMPLE_BUFFER_SIZE=${SAMPLE_BUFFER_SIZE}
 PHASE_STEP_TABLE_BIT_SIZE=${PHASE_STEP_TABLE_BIT_SIZE}
 SYNTH_NUM_VOICES=4
 SYNTH_OPERATORS_PER_VOICE=4
-#DIVIDE_FAST_SHIFT
+DIVIDE_FAST_SHIFT
 #DIVIDE_FAST_ADJUSTED
-DIVIDE_ACCURATE
+#DIVIDE_ACCURATE
 )
 
 add_custom_target(

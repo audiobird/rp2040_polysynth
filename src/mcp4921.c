@@ -69,6 +69,6 @@ void mcp4921_send_buffer(int32_t * samples)
 
 int32_t mcp4921_get_timestamp()
 {
-    return SAMPLE_BUFFER_SIZE - dma_hw->ch[0].transfer_count;
+    return SAMPLE_BUFFER_SIZE - dma_hw->ch[mcp4921_dma_chan].transfer_count;
 }
 

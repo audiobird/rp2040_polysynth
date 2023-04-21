@@ -9,10 +9,10 @@ void operator_params_attach(operator_t * operator, operator_params_t * params)
     adsr_params_attach(&operator->amp_adsr, &params->amp_adsr_params);
 }
 
-void operator_process_params(operator_t * op)
+void operator_process_params(operator_t * op, int8_t midi_note)
 {
     adsr_process(&op->amp_adsr);
-    sine_osc_set_pitch(&op->sine_osc, 0, op->params->sine_osc_params.transpose, 0);
+    sine_osc_process_params(&op->sine_osc, midi_note);
 }
 
 void operator_process_audio(operator_t * op)

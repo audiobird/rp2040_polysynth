@@ -32,7 +32,7 @@ void adsr_process(adsr_t * x)
 {
     int temp = x->out_val;
 
-    if (!x->trig)
+    if (!*x->gate)
     x->state = ADSR_RELEASE;
 
     int rate;
@@ -76,7 +76,7 @@ void adsr_process(adsr_t * x)
             if (temp < 0)
             temp = 0;
 
-            if (x->trig)
+            if (*x->gate)
             x->state = ADSR_ATTACK;
 
             break;
@@ -84,11 +84,6 @@ void adsr_process(adsr_t * x)
     }
 
     x->out_val = temp;
-}
-
-void adsr_trig(adsr_t * x, bool dir)
-{
-    x->trig = dir;
 }
 
 bool adsr_is_open(adsr_t * x)
@@ -110,4 +105,10 @@ int32_t adsr_get_output(adsr_t * x)
 void adsr_params_attach(adsr_t * adsr, adsr_params_t * params)
 {
     adsr->params = params;
+}
+
+void adsr_attach_gate(adsr_t * adsr, gate_t * gate)
+{
+   //gate_attach_src(adsr->gate, gate);
+    adsr->gate = gate;
 }
