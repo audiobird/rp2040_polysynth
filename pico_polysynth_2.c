@@ -86,10 +86,10 @@ void core_1()
     {   
         operator_params_t * op = params[x].op_params;
 
-        op->amp_adsr_params.attack = 0;
-        op->amp_adsr_params.decay = 0;
-        op->amp_adsr_params.sustain = 0;
-        op->amp_adsr_params.release = 0;
+        op->amp_adsr_params.a = 0;
+        op->amp_adsr_params.d = 0;
+        op->amp_adsr_params.s = 0;
+        op->amp_adsr_params.r = 0;
 
         op->vca_params.gain = 127;
     }
@@ -125,6 +125,7 @@ void core_1()
 
 int main()
 {
+    set_sys_clock_khz(250, 1);
     /* do general setup here, leds and whatnot */
     multicore_launch_core1(core_1);
     core_0();

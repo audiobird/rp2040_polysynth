@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <inttypes.h>
+#include "hardware/divider.h"
 
 static inline int32_t minimum(const int32_t a, const int32_t b);
 static inline int32_t minimum(const int32_t a, const int32_t b)
@@ -29,7 +30,8 @@ static inline int32_t divide_signed_by_bits(const int32_t numerator, const uint8
     #elif DIVIDE_FAST_ADJUSTED
     return numerator / (1l << bits);
     #elif DIVIDE_ACCURATE
-    return numerator / ((1l << bits) - 1);
+    hw_divider_divmod_s32_start(numerator, ((1l << bits) - 1));
+    return hw_divider_s32_quotient_wait();
     #endif
 }
 

@@ -2,7 +2,6 @@
 #define __ADSR_H__
 
 #include <pico/stdio.h>
-#include "signal.h"
 #include "trig_gate.h"
 
 typedef enum adsr_state
@@ -15,10 +14,10 @@ typedef enum adsr_state
 
 typedef struct adsr_params
 {
-    int8_t attack;
-    int8_t decay;
-    int8_t sustain;
-    int8_t release;    
+    int8_t a;
+    int8_t d;
+    int8_t s;
+    int8_t r;    
 } adsr_params_t;
 
 typedef struct adsr

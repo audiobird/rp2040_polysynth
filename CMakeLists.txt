@@ -38,9 +38,9 @@ src/operator.c
 src/voice.c
 src/bit_crusher.c
 src/rate_reducer.c
-src/bus.c
+src/ring_mod.c
 include/trig_gate.h
-include/bus.h
+include/ring_mod.h
 include/rate_reducer.h
 include/bit_crusher.h
 include/voice.h
@@ -92,7 +92,7 @@ pico_add_extra_outputs(pico_polysynth_2)
 
 set(WAVE_TABLE_BIT_WIDTH "16")
 set(WAVE_TABLE_SAMPLE_DEPTH "16")
-set(AUDIO_SAMPLE_RATE "48000")
+set(AUDIO_SAMPLE_RATE "24000")
 set(SAMPLE_BUFFER_SIZE "32")
 set(PHASE_STEP_TABLE_BIT_SIZE "14")
 
@@ -103,10 +103,10 @@ AUDIO_SAMPLE_RATE=${AUDIO_SAMPLE_RATE}
 SAMPLE_BUFFER_SIZE=${SAMPLE_BUFFER_SIZE}
 PHASE_STEP_TABLE_BIT_SIZE=${PHASE_STEP_TABLE_BIT_SIZE}
 SYNTH_NUM_VOICES=4
-SYNTH_OPERATORS_PER_VOICE=4
-DIVIDE_FAST_SHIFT
+SYNTH_OPERATORS_PER_VOICE=3
+#DIVIDE_FAST_SHIFT
 #DIVIDE_FAST_ADJUSTED
-#DIVIDE_ACCURATE
+DIVIDE_ACCURATE
 )
 
 add_custom_target(
