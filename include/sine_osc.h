@@ -26,12 +26,10 @@ void sine_osc_params_set_octave_offset(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_mod_amount(sine_osc_params_t * p, int8_t m_val);
-void sine_osc_params_attach_audio_input(sine_osc_params_t * o, audio_output_t * src);
 void sine_osc_params_attach(sine_osc_t * o, sine_osc_params_t * p);
 
 void sine_osc_process(sine_osc_t * o, uint8_t voice, uint8_t op);
 void sine_osc_process_params(sine_osc_t * o, int8_t midi_note);
 void sine_osc_set_pitch(sine_osc_t * o, int8_t octave, int16_t semitone, int16_t fine_tune);
-audio_output_t * sine_osc_get_output(sine_osc_t * o);
-void sine_osc_attach_gate(sine_osc_t * o, gate_t * gate);
+void sine_osc_reset_phase(sine_osc_t * o);
 #endif

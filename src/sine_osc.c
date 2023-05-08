@@ -39,7 +39,7 @@ void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t m_val)
 void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t m_val)
 {   
     m_val -= 64;
-    p->fine_offset = clamp(m_val, -64, 63);
+    p->fine_offset = m_val;
 }
 
 void sine_osc_params_set_mod_amount(sine_osc_params_t * p, int8_t m_val)
@@ -52,8 +52,7 @@ void sine_osc_params_attach(sine_osc_t * o, sine_osc_params_t * params)
     o->params = params;
 }
 
-void sine_osc_attach_gate(sine_osc_t * o, gate_t * gate)
+void sine_osc_reset_phase(sine_osc_t * o)
 {
-    //trig_attach_gate(&o->trig, gate);
-    o->trig.current_gate = gate;
+    o->phasor.accumulator = 0;
 }

@@ -1,5 +1,4 @@
 #include <midi_input_driver.h>
-#include <nanomidi/decoder.h>
 
 struct midi_istream midi_input[NUM_MIDI_INPUTS];
 uint8_t sysex_buffer[NUM_MIDI_INPUTS][SIZE_OF_SYSEX_BUFFER]; 
@@ -31,7 +30,25 @@ void midi_input_driver_read()
 
     if (message != NULL)
     {
-        //message!!
+        switch(message->type)
+        {
+            case MIDI_TYPE_NOTE_ON:
+            {
+                if (message->data.note_on.velocity)
+                {
+                    midi_handle_note_on(message);
+                    break;
+                }
+               
+            }
+            case MIDI_TYPE_NOTE_OFF:
+            midi_handle_note_off(message);
+            break;
+
+            case MIDI_TYPE_CONTROL_CHANGE:
+            midi_handle_cc(message);
+            break;            
+        }
         
     }
 }

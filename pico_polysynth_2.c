@@ -1,29 +1,30 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
-#include <midi_input_driver.h>
+#include "midi_input_driver.h"
 
 #include "mcp4921.h"
 
 #include "voice.h"
 
-/*  Notes:
-Core 0 = Audio synthesis
-Core 1 = Midi, CV, Gates, LFO
+#define dac_init mcp4921_init
 
-4 Voice
-16 Part multi-timberal 
-
-3 CV Inputs
-? Gate inputs   
-*/
-
-volatile int xrun = 0;
 volatile bool wait = 1;
 
+void midi_handle_note_on(struct midi_message * message)
+{
+    
+}
 
-voice_t voice[SYNTH_NUM_VOICES];
-voice_params_t params;
+void midi_handle_note_off(struct midi_message * message)
+{
+
+}
+
+void midi_handle_cc(struct midi_message * message)
+{
+   
+}
 
 int32_t core_0_process_audio_rate()
 {
@@ -31,7 +32,7 @@ int32_t core_0_process_audio_rate()
 
     for (int x = 0; x < SYNTH_NUM_VOICES; x++)
     {
-        voice_process_audio(&voice[x], x);
+        voice_process_audio(x);
     }
     
     return voice_get_all() / SYNTH_NUM_VOICES;
@@ -40,21 +41,19 @@ int32_t core_0_process_audio_rate()
 void core_0_process_audio_params()
 {
     for(int x = 0; x < SYNTH_NUM_VOICES; x++)
-    voice_process_params(&voice[x]);
+    voice_process_params(x);
 }
 
 void core_0()
 {
-    mcp4921_init();
+    dac_init();
 
     int32_t audio_buffer[SAMPLE_BUFFER_SIZE];
 
-    
-
-    int iterations = 32;
-
     while(wait)
     ;
+
+    wait = 1;
 
     while(1)
     {
@@ -75,43 +74,15 @@ void core_0()
 void core_1()
 {
     midi_input_driver_init();
-    gate_t flipper = 0;
-    int8_t midi_note = 60;
-
-    for (int x = 0; x < SYNTH_NUM_VOICES; x++)
-    voice_init(&voice[x], &params, 0);
-
-        operator_params_t * op = params.op_params;
-
-        adsr_params_set_attack(&op->amp_adsr_params, 0);
-        adsr_params_set_decay(&op->amp_adsr_params, 0);
-        adsr_params_set_sustain(&op->amp_adsr_params, 0);
-        adsr_params_set_release(&op->amp_adsr_params, 0);
-
-        op->vca_params.gain = 127;
-    
-    for(int x = 0; x < SYNTH_NUM_VOICES; x++)
-    {
-        voice_set_midi_note(&voice[x], 60);
-        voice_set_gate(&voice[x], 1);
-    }
 
     wait = 0;
+
+    while(!wait)
+    ;
 
     while(1)
     {   
         midi_input_driver_read();
-        sleep_ms(1000);
-        flipper ^= 1;
-        
-        
-        
-        if (flipper)
-        midi_note++;
-
-        if (midi_note == 72)
-        midi_note = 60;
-
     }
 }
 

@@ -24,17 +24,23 @@ typedef struct voice
     rate_reducer_t rate_reducer;
     bit_crusher_t bit_crusher;
     ring_mod_t ring_mod;
+
     voice_params_t * params;
+    uint8_t timbre;
     int8_t midi_note;
-    gate_t gate;
+    uint8_t velocity;
+    int16_t pitch_bend;
+    bool gate;
 } voice_t;
 
-void voice_process_params(voice_t * v);
-void voice_process_audio(voice_t * v, uint8_t voice);
-void voice_set_gate(voice_t * v, gate_t state);
-void voice_set_midi_note(voice_t * v, int8_t midi_note);
-void voice_attach_params(voice_t * v, voice_params_t * params);
-void voice_init(voice_t * v, voice_params_t * params, uint8_t alg);
+void voice_process_params(uint8_t voice);
+void voice_process_audio(uint8_t voice);
+void voice_attach_params(uint8_t voice, uint8_t timbre);
+void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg);
 audio_output_t voice_get_all();
+
+void voice_handle_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity);
+void voice_handle_note_off(uint8_t voice, uint8_t timber, uint8_t note);
+
 
 #endif

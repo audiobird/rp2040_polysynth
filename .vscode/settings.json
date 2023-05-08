@@ -21,7 +21,8 @@
       "inttypes.h": "c",
       "signal.h": "c",
       "a_io.h": "c",
-      "voice.h": "c"
+      "voice.h": "c",
+      "stdlib.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": true,

@@ -40,6 +40,10 @@ src/bit_crusher.c
 src/rate_reducer.c
 src/ring_mod.c
 src/a_io.c
+src/midi_cc.c
+src/voice_allocator.c
+include/voice_allocator.h
+include/midi_cc.h
 include/a_io.h
 include/trig_gate.h
 include/ring_mod.h
@@ -105,6 +109,7 @@ AUDIO_SAMPLE_RATE=${AUDIO_SAMPLE_RATE}
 SAMPLE_BUFFER_SIZE=${SAMPLE_BUFFER_SIZE}
 PHASE_STEP_TABLE_BIT_SIZE=${PHASE_STEP_TABLE_BIT_SIZE}
 SYNTH_NUM_VOICES=4
+SYNTH_NUM_TIMBRES=16
 SYNTH_OPERATORS_PER_VOICE=2
 #DIVIDE_FAST_SHIFT
 #DIVIDE_FAST_ADJUSTED
