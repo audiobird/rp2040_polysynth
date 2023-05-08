@@ -1,31 +1,23 @@
 #include "bit_crusher.h"
 #include "common.h"
 
+const signal_dst_t bc_dst = SRC_BC;
+
 void bit_crusher_params_attach(bit_crusher_t * bc, bit_crusher_params_t * params)
 {
     bc->params = params;
 }
 
-void bit_crusher_attach_audio_input(bit_crusher_t * bc, audio_io_t * io)
+void bit_crusher_params_set_amount(bit_crusher_params_t * params, int8_t m_val)
 {
-    bc->audio.in = &io->out;
+    params->amount = clamp(m_val, 0, 15);
 }
 
-void bit_crusher_params_set_amount(bit_crusher_params_t * params, int8_t amount)
+void bit_crusher_process_audio(bit_crusher_t * bc, uint8_t voice)
 {
-    params->amount = clamp(amount, 0, 15);
-}
-
-audio_io_t * bit_crusher_get_output(bit_crusher_t * bc)
-{
-    return &bc->audio;
-}
-
-void bit_crusher_process_audio(bit_crusher_t * bc)
-{
-    int32_t a = *bc->params->a_in;
+    audio_input_t a = audio_get_src_phase(voice, bc->params->src);
 
     a &= 0xfffffffful << bc->params->amount;
 
-    bc->a_out = a;
+    audio_set_dst_phase(voice, bc_dst, a);
 }

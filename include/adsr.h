@@ -14,10 +14,10 @@ typedef enum adsr_state
 
 typedef struct adsr_params
 {
-    int8_t a;
-    int8_t d;
-    int8_t s;
-    int8_t r;    
+    uint16_t a;
+    uint16_t d;
+    uint16_t s;
+    uint16_t r;    
 } adsr_params_t;
 
 typedef struct adsr

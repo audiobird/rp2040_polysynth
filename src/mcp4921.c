@@ -21,7 +21,7 @@ void mcp4921_init()
     dma_channel_config c = dma_channel_get_default_config(mcp4921_dma_chan);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_16);
     int timer = dma_claim_unused_timer(true);
-    dma_timer_set_fraction(timer, 3, 31250);
+    dma_timer_set_fraction(timer, 6, 31250);
     int treq = dma_get_timer_dreq(timer);
     channel_config_set_dreq(&c, treq);
 

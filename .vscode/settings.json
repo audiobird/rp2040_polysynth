@@ -19,7 +19,9 @@
       "midi_input_driver.h": "c",
       "phase_step_table.h": "c",
       "inttypes.h": "c",
-      "signal.h": "c"
+      "signal.h": "c",
+      "a_io.h": "c",
+      "voice.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": true,

@@ -1,74 +1,144 @@
 #include "voice.h"
 
-audio_output_t * voice_get_output(voice_t * voice)
-{
-    return &voice->a_out;
-}
+const signal_dst_t voice_dst = SRC_VOICE;
 
-void voice_process_params(voice_t * voice)
+void voice_process_params(voice_t * v)
 {
-    for (int x = 0; x < SYNTH_OPERATORS_PER_VOICE; x++)
+    for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_process_params(&voice->operator[x], voice->midi_note);
+        operator_process_params(&v->operator[op], v->midi_note);
     }
 }
 
-void voice_process_audio(voice_t * voice)
+void voice_process_audio(voice_t * v, uint8_t voice)
 {
-    for (int x = 0; x < SYNTH_OPERATORS_PER_VOICE; x++)
+    for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_process_audio(&voice->operator[x]);
+        operator_process_audio(&v->operator[op], voice, op);
     }
-    bit_crusher_process_audio(&voice->bit_crusher);
-    rate_reducer_process_audio(&voice->rate_reducer);
-    ring_mod_process_audio(&voice->ring_mod);
-    voice->a_out = *operator_get_output(&voice->operator[0]);
+    bit_crusher_process_audio(&v->bit_crusher, voice);
+    rate_reducer_process_audio(&v->rate_reducer, voice);
+    ring_mod_process_audio(&v->ring_mod, voice);
+    audio_set_dst_phase(voice, voice_dst, audio_get_src_phase(voice, v->params->src));
 }
 
-void voice_set_gate(voice_t * voice, gate_t state)
+audio_output_t voice_get_all()
 {
-    voice->gate = state;
+    audio_output_t o;
+
+    o  = audio_get_src_phase(0, SRC_VOICE);
+    o += audio_get_src_phase(1, SRC_VOICE);
+    o += audio_get_src_phase(2, SRC_VOICE);
+    o += audio_get_src_phase(3, SRC_VOICE);
+
+    return o;
 }
 
-void voice_set_midi_note(voice_t * voice, int8_t midi_note)
+void voice_set_gate(voice_t * v, gate_t state)
 {
-    voice->midi_note = midi_note;
+    v->gate = state;
 }
 
-void voice_attach_params(voice_t * voice, voice_params_t * params)
+void voice_set_midi_note(voice_t * v, int8_t midi_note)
 {
-    voice->params = params;
+    v->midi_note = midi_note;
 }
 
-void voice_init(voice_t * voice, voice_params_t * params, uint8_t alg)
+void voice_attach_params(voice_t * v, voice_params_t * params)
 {
-    assert(alg < 16);
+    v->params = params;
+}
 
-    voice->params = params;
-
-    for (int x = 0; x < SYNTH_OPERATORS_PER_VOICE; x++)
-    {
-        operator_init(&voice->operator[x], &params->op_params[x]);
-        sine_osc_attach_gate(&voice->operator[x].sine_osc, &voice->gate);
-        adsr_attach_gate(&voice->operator[x].amp_adsr, &voice->gate);
-    }
-
-    bit_crusher_params_attach(&voice->bit_crusher, &params->bc_params);
-    rate_reducer_params_attach(&voice->rate_reducer, &params->rr_params);
-    ring_mod_params_attach(&voice->ring_mod, &params->rb_params);
-
+void voice_params_setup_algorithm(voice_params_t * params, uint8_t alg)
+{
     switch (alg)
     {
         case 0:
         {
-            //2 -> bc -fb> 1 -> rr -> 0 -> rm(dis) -> out
-            bit_crusher_params_attach_audio_input(&params->bc_params, operator_get_output(&voice->operator[2]));
-            operator_params_attach_audio_input(&params->op_params[2], bit_crusher_get_output(&voice->bit_crusher));
-            operator_params_attach_audio_input(&params->op_params[1], bit_crusher_get_output(&voice->bit_crusher));
-            rate_reducer_params_attach_audio_input(&params->rr_params, operator_get_output(&voice->operator[1]));
-            operator_params_attach_audio_input(&params->op_params[0], rate_reducer_get_output(&voice->rate_reducer));
-            ring_mod_params_attach_audio_input(&params->rb_params, operator_get_output(&voice->operator[0]), 0);
-            ring_mod_params_disable(&params->rb_params);
+            //sequential fm with rate reducer and bit crusher on the tail
+            //feedback on second operator
+            params->src = SRC_RR;
+            params->rr_params.src = SRC_BC;
+            params->bc_params.src = SRC_OP0;
+            params->op_params[0].src = SRC_VCA0;
+            params->op_params[0].vca_params.src = SRC_OSC0;
+            params->op_params[0].sine_osc_params.src = SRC_OP1;
+            params->op_params[1].src = SRC_VCA1; 
+            params->op_params[1].vca_params.src = SRC_OSC1;
+            params->op_params[1].sine_osc_params.src = SRC_OSC1; //fb
+            params->rm_params.src[0] = SRC_RM;
+            params->rm_params.src[1] = SRC_RM;
+            break;
         }
+        case 1:
+        {
+            //sequential fm with rate reducer in feedback path, bit crusher in between operators
+            //feedback goes from 1st op to 2nd op
+            params->src = SRC_OP0;
+            params->op_params[0].src = SRC_VCA0;
+            params->op_params[0].vca_params.src = SRC_OSC0;
+            params->op_params[0].sine_osc_params.src = SRC_BC;
+            params->bc_params.src = SRC_OP1;
+            params->op_params[1].src = SRC_VCA1;
+            params->op_params[1].vca_params.src = SRC_OSC0;
+            params->op_params[1].sine_osc_params.src = SRC_RR;
+            params->rr_params.src = SRC_OP0;
+            params->rm_params.src[0] = SRC_RM;
+            params->rm_params.src[1] = SRC_RM;
+            break;
+        }
+        case 2:
+        {
+            //duophonic voice each with a lofi effect modulating eachother, and ring modded together
+            params->src = SRC_RM;
+            params->rm_params.src[0] = SRC_BC;
+            params->bc_params.src = SRC_OP0;
+            params->op_params[0].src = SRC_VCA0;
+            params->op_params[0].vca_params.src = SRC_OSC0;
+            params->op_params[0].sine_osc_params.src = SRC_RR;
+            params->rm_params.src[1] = SRC_RR;
+            params->op_params[1].src = SRC_VCA1;
+            params->op_params[1].vca_params.src = SRC_RR;
+            params->rr_params.src = SRC_OSC1;
+            params->op_params[1].sine_osc_params.src = SRC_BC;
+            break;
+        }
+        case 3:
+        {
+            //operator 2 and operator 1 are ring modded and fed to the feedback path of op 1
+            //bit crusher and rate reducer on output.
+            params->src = SRC_RR;
+            params->rr_params.src = SRC_BC;
+            params->bc_params.src = SRC_OP0;
+            params->op_params[0].src = SRC_VCA0;
+            params->op_params[0].vca_params.src = SRC_OSC0;
+            params->op_params[0].sine_osc_params.src = SRC_RM;
+            params->rm_params.src[0] = SRC_OSC0;
+            params->rm_params.src[1] = SRC_OP1;
+            params->op_params[1].src = SRC_VCA1; 
+            params->op_params[1].vca_params.src = SRC_OSC1;
+            params->op_params[1].sine_osc_params.src = SRC_RR; //gnarly.
+            break;
+        }
+
     }
+}
+
+void voice_init(voice_t * v, voice_params_t * params, uint8_t alg)
+{
+    voice_attach_params(v, params);
+
+    for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
+    {
+        operator_init(&v->operator[op], &params->op_params[op]);
+        sine_osc_attach_gate(&v->operator[op].sine_osc, &v->gate);
+        adsr_attach_gate(&v->operator[op].amp_adsr, &v->gate);
+    }
+    
+
+    bit_crusher_params_attach(&v->bit_crusher, &params->bc_params);
+    rate_reducer_params_attach(&v->rate_reducer, &params->rr_params);
+    ring_mod_params_attach(&v->ring_mod, &params->rm_params);
+
+    voice_params_setup_algorithm(params, alg);
 }

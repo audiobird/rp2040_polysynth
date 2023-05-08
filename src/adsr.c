@@ -10,23 +10,23 @@ uint16_t adsr_midi_to_rate(uint8_t mval)
 
 void adsr_params_set_attack(adsr_params_t * x, uint8_t m_val)
 {
-    x->a = m_val;
+    x->a = adsr_midi_to_rate(m_val);
     
 }
 
 void adsr_params_set_decay(adsr_params_t * x, uint8_t m_val)
 {
-    x->d = m_val;
+    x->d = adsr_midi_to_rate(m_val);
 }
 
 void adsr_params_set_sustain(adsr_params_t * x, uint8_t m_val)
 {
-    x->s = m_val;
+    x->s = adsr_midi_to_rate(m_val);
 }
 
 void adsr_params_set_release(adsr_params_t * x, uint8_t m_val)
 {
-    x->r = m_val;
+    x->r = adsr_midi_to_rate(m_val);
 }
 
 void adsr_process(adsr_t * x)
@@ -42,7 +42,7 @@ void adsr_process(adsr_t * x)
     {
         case ADSR_ATTACK:
         {
-            rate = adsr_midi_to_rate(x->params->a);
+            rate = x->params->a;
             temp += rate;
 
             if (temp > UINT16_MAX)
@@ -55,24 +55,24 @@ void adsr_process(adsr_t * x)
         }
         case ADSR_DECAY:
         {
-            rate = adsr_midi_to_rate(x->params->d);
+            rate = x->params->d;
             temp -= rate;
 
-            if (temp < adsr_midi_to_rate(x->params->s))
+            if (temp < x->params->s)
             {
-                temp = adsr_midi_to_rate(x->params->s);
+                temp = x->params->s;
                 x->state = ADSR_SUSTAIN;
             }
             
             break;
         }
         case ADSR_SUSTAIN: 
-            temp = adsr_midi_to_rate(x->params->s); 
+            temp = x->params->s; 
             break;
 
         case ADSR_RELEASE:
         {
-            temp -= adsr_midi_to_rate(x->params->r);
+            temp -= x->params->r;
 
             if (temp < 0)
             temp = 0;

@@ -23,7 +23,7 @@ volatile bool wait = 1;
 
 
 voice_t voice[SYNTH_NUM_VOICES];
-voice_params_t params[SYNTH_NUM_VOICES];
+voice_params_t params;
 
 int32_t core_0_process_audio_rate()
 {
@@ -31,11 +31,10 @@ int32_t core_0_process_audio_rate()
 
     for (int x = 0; x < SYNTH_NUM_VOICES; x++)
     {
-        voice_process_audio(&voice[x]);
-        sample += *voice_get_output(&voice[x]);
+        voice_process_audio(&voice[x], x);
     }
     
-    return sample >> SYNTH_NUM_VOICES;
+    return voice_get_all() / SYNTH_NUM_VOICES;
 }
 
 void core_0_process_audio_params()
@@ -50,15 +49,14 @@ void core_0()
 
     int32_t audio_buffer[SAMPLE_BUFFER_SIZE];
 
-    for (int x = 0; x < SYNTH_NUM_VOICES; x++)
-    voice_init(&voice[x], &params[x], 0);
+    
 
     int iterations = 32;
 
     while(wait)
     ;
 
-    while(iterations--)
+    while(1)
     {
 
         core_0_process_audio_params();
@@ -67,8 +65,6 @@ void core_0()
         {
             audio_buffer[x] = core_0_process_audio_rate();
         }
-
-        xrun = !mcp4921_is_busy();
 
         mcp4921_send_buffer(audio_buffer);
     }
@@ -83,21 +79,17 @@ void core_1()
     int8_t midi_note = 60;
 
     for (int x = 0; x < SYNTH_NUM_VOICES; x++)
-    {   
-        operator_params_t * op = params[x].op_params;
+    voice_init(&voice[x], &params, 0);
 
-        op->amp_adsr_params.a = 0;
-        op->amp_adsr_params.d = 0;
-        op->amp_adsr_params.s = 0;
-        op->amp_adsr_params.r = 0;
+        operator_params_t * op = params.op_params;
+
+        adsr_params_set_attack(&op->amp_adsr_params, 0);
+        adsr_params_set_decay(&op->amp_adsr_params, 0);
+        adsr_params_set_sustain(&op->amp_adsr_params, 0);
+        adsr_params_set_release(&op->amp_adsr_params, 0);
 
         op->vca_params.gain = 127;
-    }
     
-    params[1].op_params[0].sine_osc_params.transpose = 4;
-    params[2].op_params[0].sine_osc_params.transpose = 7;
-    params[3].op_params[0].sine_osc_params.transpose = 12;
-
     for(int x = 0; x < SYNTH_NUM_VOICES; x++)
     {
         voice_set_midi_note(&voice[x], 60);
@@ -125,7 +117,7 @@ void core_1()
 
 int main()
 {
-    set_sys_clock_khz(250, 1);
+    //set_sys_clock_khz(250, 1);
     /* do general setup here, leds and whatnot */
     multicore_launch_core1(core_1);
     core_0();

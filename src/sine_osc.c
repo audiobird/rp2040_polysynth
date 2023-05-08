@@ -2,13 +2,15 @@
 #include "tables/sine_table.h"
 #include "common.h"
 
+const signal_dst_t dst[SYNTH_OPERATORS_PER_VOICE] = {SRC_OSC0, SRC_OSC1};
 
-void sine_osc_process(sine_osc_t * o)
+void sine_osc_process(sine_osc_t * o, uint8_t voice, uint8_t op)
 {
     phasor_advance_phase(&o->phasor);
     uint16_t phase = phasor_get_phase(&o->phasor);
-    phase += multiply_and_scale(*o->params->a_in, o->params->mod_amount, 7);
-    o->a_out = sine_table[phase];
+    audio_input_t mod = audio_get_src_phase(voice, o->params->src);
+    phase += multiply_and_scale(mod, o->params->mod_amount, 7);
+    audio_set_dst_phase(voice, dst[op], sine_table[phase]);
 }
 
 void sine_osc_process_params(sine_osc_t * o, int8_t midi_note)
@@ -22,39 +24,32 @@ void sine_osc_process_params(sine_osc_t * o, int8_t midi_note)
     phasor_reset_phase(&o->phasor);
 }
 
-void sine_osc_params_set_octave_offset(sine_osc_params_t * p, int8_t octave_offset)
+void sine_osc_params_set_octave_offset(sine_osc_params_t * p, int8_t m_val)
 { 
-    p->octave_offset = clamp(octave_offset, -5, 5);
+    m_val -= 64;
+    p->octave_offset = clamp(m_val, -5, 5);
 }
 
-void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t transpose)
+void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t m_val)
 {
-    p->transpose = clamp(transpose, -11, 11);
+    m_val -= 64;
+    p->transpose = clamp(m_val, -11, 11);
 }
 
-void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t fine_offset)
-{
-    p->fine_offset = clamp(fine_offset, -64, 63);
+void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t m_val)
+{   
+    m_val -= 64;
+    p->fine_offset = clamp(m_val, -64, 63);
 }
 
-void sine_osc_params_set_mod_amount(sine_osc_params_t * p, int8_t mod_amount)
+void sine_osc_params_set_mod_amount(sine_osc_params_t * p, int8_t m_val)
 {
-    p->mod_amount = mod_amount;
+    p->mod_amount = m_val;
 }
 
 void sine_osc_params_attach(sine_osc_t * o, sine_osc_params_t * params)
 {
     o->params = params;
-}
-
-void sine_osc_params_attach_audio_input(sine_osc_params_t * params, audio_output_t * src)
-{
-    params->a_in = src;
-}
-
-audio_output_t * sine_osc_get_output(sine_osc_t * o)
-{
-    return &o->a_out;
 }
 
 void sine_osc_attach_gate(sine_osc_t * o, gate_t * gate)
