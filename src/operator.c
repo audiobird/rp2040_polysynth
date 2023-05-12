@@ -23,11 +23,6 @@ void operator_process_audio(operator_t * o, uint8_t voice, uint8_t op)
     audio_set_dst_phase(voice, op_dst[op], temp);
 }
 
-void operator_params_attach_audio_input(operator_params_t * params, audio_output_t * src)
-{
-    sine_osc_params_attach_audio_input(&params->sine_osc_params, src);
-}
-
 void operator_init(operator_t * o, operator_params_t * params)
 {
     operator_params_attach(o, params);

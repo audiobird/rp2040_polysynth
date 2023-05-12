@@ -5,15 +5,22 @@ const signal_dst_t voice_dst = SRC_VOICE;
 voice_t v[SYNTH_NUM_VOICES];
 voice_params_t params[SYNTH_NUM_TIMBRES];
 
-void voice_handle_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity)
+void voice_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity)
 {
+    
     voice_attach_params(voice, timbre);
     v[voice].midi_note = note;
     v[voice].velocity = velocity;
-    
-    
-    
+    v[voice].gate = 1;
 
+    adsr_trigger(&v[voice].operator->amp_adsr, 1);
+}
+
+void voice_note_off(uint8_t voice)
+{
+    v[voice].gate = 0;
+
+    adsr_trigger(&v[voice].operator->amp_adsr, 0);
 }
 
 void voice_process_params(uint8_t voice)
@@ -143,4 +150,11 @@ void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg)
     ring_mod_params_attach(&v[voice].ring_mod, &params[timbre].rm_params);
 
     voice_params_setup_algorithm(timbre, alg);
+
+    params[0].op_params[0].amp_adsr_params.a = 256;
+    params[0].op_params[0].amp_adsr_params.d = 6006;
+    params[0].op_params[0].amp_adsr_params.s = 30000;
+    params[0].op_params[0].amp_adsr_params.r = 128;
+    params[0].op_params[0].vca_params.gain = 65535;
+    
 }

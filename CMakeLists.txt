@@ -56,6 +56,8 @@ include/vca.h
 include/common.h
 include/sine_osc.h
 include/phasor.h
+include/tables/exp_table.c
+include/tables/exp_table.h
 include/tables/phase_step_table.c
 include/tables/phase_step_table.h
 include/tables/sine_table.c
@@ -101,6 +103,7 @@ set(WAVE_TABLE_SAMPLE_DEPTH "16")
 set(AUDIO_SAMPLE_RATE "24000")
 set(SAMPLE_BUFFER_SIZE "32")
 set(PHASE_STEP_TABLE_BIT_SIZE "14")
+set(EXP_CURVE "8")
 
 add_compile_definitions(
 WAVE_TABLE_BIT_WIDTH=${WAVE_TABLE_BIT_WIDTH}
@@ -121,6 +124,7 @@ add_custom_target(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/log_table_gen > ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/log_table.c
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/sin_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${WAVE_TABLE_BIT_WIDTH} ${WAVE_TABLE_SAMPLE_DEPTH}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/phase_step_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${PHASE_STEP_TABLE_BIT_SIZE} ${AUDIO_SAMPLE_RATE}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/exp_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${EXP_CURVE}
 )
 add_dependencies(pico_polysynth_2 table_generators)
 

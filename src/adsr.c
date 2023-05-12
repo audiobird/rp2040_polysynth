@@ -1,6 +1,7 @@
 #include "adsr.h"
 #include "math.h"
 #include "tables/log_table.h"
+#include "tables/exp_table.h"
 
 static inline uint16_t adsr_midi_to_rate(uint8_t mval)
 {
@@ -39,9 +40,25 @@ inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t adsr, uint8_t m
     }
 }
 
+void adsr_trigger(adsr_t * x, bool gate)
+{
+    if (gate && !x->prev_gate)
+    {
+        x->prev_gate = 1;
+        x->working_val = 0;
+        x->state = ADSR_ATTACK;
+    }
+    
+    else if (!gate && x->prev_gate)
+    {
+        x->prev_gate = 0;
+        x->state = ADSR_RELEASE;
+    }
+}
+
 void adsr_process(adsr_t * x)
 {
-    int temp = x->out_val;
+    int temp = x->working_val;
     int rate;
 
     switch (x->state)
@@ -108,12 +125,13 @@ void adsr_process(adsr_t * x)
         }
     }
 
-    x->out_val = temp;
+    x->working_val = temp;
+    x->out_val = exp_table[temp];
 }
 
 inline bool adsr_is_open(adsr_t * x)
 {
-    return x->out_val > 0;
+    return x->working_val > 0;
 }
 
 inline bool adsr_is_off(adsr_t * x)

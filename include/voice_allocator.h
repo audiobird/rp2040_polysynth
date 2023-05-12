@@ -27,4 +27,10 @@ typedef struct
     voice_allocation_params_t * params;
 } voice_allocation_t;
 
+void voice_allocator_notify_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity);
+void voice_allocator_notify_note_off(uint8_t voice, uint8_t timber, uint8_t note);
+
+bool voice_allocator_note_on(uint8_t channel, uint8_t note, uint8_t * best_voice);
+bool voice_allocator_note_off(uint8_t channel, uint8_t note, uint8_t * voice);
+
 #endif

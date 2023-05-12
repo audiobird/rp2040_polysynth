@@ -28,6 +28,8 @@ void midi_input_driver_read()
 {
     struct midi_message *message = midi_decode(&midi_input[0]);
 
+    message->channel -= 1;
+
     if (message != NULL)
     {
         switch(message->type)

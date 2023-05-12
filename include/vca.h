@@ -7,7 +7,7 @@
 
 typedef struct vca_params
 {
-    int8_t gain;
+    uint16_t gain;
     signal_src_t src;
 } vca_params_t;
 

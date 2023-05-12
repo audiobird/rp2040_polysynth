@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "midi_input_driver.h"
+#include "voice_allocator.h"
 
 #include "mcp4921.h"
 
@@ -13,12 +14,27 @@ volatile bool wait = 1;
 
 void midi_handle_note_on(struct midi_message * message)
 {
-    
+    uint8_t voice = 0;
+
+    //if(!voice_allocator_note_on(message->channel, message->data.note_on.note, &voice))
+    //return;
+
+    //yea. trigger da note
+    voice_note_on(voice, message->channel, message->data.note_on.note, message->data.note_on.velocity);
+
+
+
 }
 
 void midi_handle_note_off(struct midi_message * message)
 {
+    uint8_t voice = 0;
 
+    //if (!voice_allocator_note_off(message->channel, message->data.note_off.note, &voice))
+    //return;
+
+    //trigger the note off.
+    voice_note_off(voice);
 }
 
 void midi_handle_cc(struct midi_message * message)
@@ -74,6 +90,11 @@ void core_0()
 void core_1()
 {
     midi_input_driver_init();
+
+    voice_init(0, 0, 0);
+    voice_init(1, 0, 0);
+    voice_init(2, 0, 0);
+    voice_init(3, 0, 0);
 
     wait = 0;
 

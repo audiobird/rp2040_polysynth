@@ -39,8 +39,8 @@ void voice_attach_params(uint8_t voice, uint8_t timbre);
 void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg);
 audio_output_t voice_get_all();
 
-void voice_handle_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity);
-void voice_handle_note_off(uint8_t voice, uint8_t timber, uint8_t note);
+void voice_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity);
+void voice_note_off(uint8_t voice);
 
 
 #endif
