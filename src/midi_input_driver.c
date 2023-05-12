@@ -4,14 +4,15 @@ struct midi_istream midi_input[NUM_MIDI_INPUTS];
 uint8_t sysex_buffer[NUM_MIDI_INPUTS][SIZE_OF_SYSEX_BUFFER]; 
 
 static size_t read_uart_0(uint8_t *data)
-{
-    int size = uart_is_readable(uart0) > 0;
-    
+{    
     //it doesnt matter if this data is garbage.
     //it will be handeled based on the return value of "size"
+    if (!uart_is_readable(uart0))
+    return 0;
+
     *data = (uint8_t)uart_get_hw(uart0)->dr;
 
-    return size;
+    return 1;
 }
 
 void midi_input_driver_init()

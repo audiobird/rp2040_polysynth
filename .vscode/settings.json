@@ -23,7 +23,8 @@
       "a_io.h": "c",
       "voice.h": "c",
       "stdlib.h": "c",
-      "exp_table.h": "c"
+      "exp_table.h": "c",
+      "mcp4921.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": true,

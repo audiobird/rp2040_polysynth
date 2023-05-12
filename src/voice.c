@@ -7,20 +7,15 @@ voice_params_t params[SYNTH_NUM_TIMBRES];
 
 void voice_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity)
 {
-    
-    voice_attach_params(voice, timbre);
+    v[voice].timbre = timbre;
     v[voice].midi_note = note;
     v[voice].velocity = velocity;
     v[voice].gate = 1;
-
-    adsr_trigger(&v[voice].operator->amp_adsr, 1);
 }
 
 void voice_note_off(uint8_t voice)
 {
     v[voice].gate = 0;
-
-    adsr_trigger(&v[voice].operator->amp_adsr, 0);
 }
 
 void voice_process_params(uint8_t voice)
@@ -151,10 +146,11 @@ void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg)
 
     voice_params_setup_algorithm(timbre, alg);
 
-    params[0].op_params[0].amp_adsr_params.a = 256;
-    params[0].op_params[0].amp_adsr_params.d = 6006;
-    params[0].op_params[0].amp_adsr_params.s = 30000;
-    params[0].op_params[0].amp_adsr_params.r = 128;
+    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_A, 64);
+    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_D, 16);
+    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_S, 96);
+    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_R, 32);
+
     params[0].op_params[0].vca_params.gain = 65535;
     
 }

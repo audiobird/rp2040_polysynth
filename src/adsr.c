@@ -5,8 +5,7 @@
 
 static inline uint16_t adsr_midi_to_rate(uint8_t mval)
 {
-    assert(mval < 128);
-    return log_table_get(127 - mval) + 1;
+    return exp_table[mval << 9] + 1;
 }
 
 static inline void adsr_params_set_attack(adsr_params_t * x, uint8_t m_val)
@@ -21,7 +20,9 @@ static inline void adsr_params_set_decay(adsr_params_t * x, uint8_t m_val)
 
 static inline void adsr_params_set_sustain(adsr_params_t * x, uint8_t m_val)
 {
-    x->s = adsr_midi_to_rate(m_val);
+    uint16_t val = 127 - m_val;
+    val <<= 9;
+    x->s = 65536 - exp_table[val];
 }
 
 static inline void adsr_params_set_release(adsr_params_t * x, uint8_t m_val)
@@ -40,20 +41,9 @@ inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t adsr, uint8_t m
     }
 }
 
-void adsr_trigger(adsr_t * x, bool gate)
+void adsr_set_gate(adsr_t * x, bool gate)
 {
-    if (gate && !x->prev_gate)
-    {
-        x->prev_gate = 1;
-        x->working_val = 0;
-        x->state = ADSR_ATTACK;
-    }
-    
-    else if (!gate && x->prev_gate)
-    {
-        x->prev_gate = 0;
-        x->state = ADSR_RELEASE;
-    }
+    x->gate = gate;
 }
 
 void adsr_process(adsr_t * x)
@@ -63,20 +53,6 @@ void adsr_process(adsr_t * x)
 
     switch (x->state)
     {
-        case ADSR_RESET_SOFT:
-        {
-            rate = temp >> 5;
-
-            temp -= (rate + 1);
-
-            if (temp < 0)
-            {
-                temp = 0;
-                x->state = ADSR_ATTACK;
-            }
-            
-            break;
-        }
         case ADSR_ATTACK:
         {
             rate = x->params->a;
@@ -121,6 +97,7 @@ void adsr_process(adsr_t * x)
         }
         case ADSR_OFF:
         {
+            temp = 0;
             break;
         }
     }

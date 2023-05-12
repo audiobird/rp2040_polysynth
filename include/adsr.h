@@ -6,7 +6,6 @@
 
 typedef enum adsr_state
 {
-    ADSR_RESET_SOFT,
     ADSR_ATTACK,
     ADSR_DECAY,
     ADSR_SUSTAIN,
@@ -36,7 +35,7 @@ typedef struct adsr
     adsr_state_t state;
     uint16_t out_val;
     int32_t working_val;
-    bool prev_gate;
+    bool gate;
 } adsr_t;
 
 void adsr_params_attach(adsr_t * adsr, adsr_params_t * params);
@@ -51,6 +50,6 @@ bool adsr_is_off(adsr_t * x);
 
 int32_t adsr_get_output(adsr_t * x);
 
-void adsr_trigger(adsr_t * x, bool gate);
+void adsr_set_gate(adsr_t * x, bool gate);
 
 #endif
