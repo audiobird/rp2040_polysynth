@@ -10,7 +10,7 @@
     - 1 Bit Crusher
     - 1 Sample Rate Reducer
     - Flexible Audio Routing
-- 48khz sample rate
+- 24khz sample rate
 
 Currently using MCP4921 Dac on default PICO SPI Pins
 
