@@ -41,11 +41,6 @@ inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t adsr, uint8_t m
     }
 }
 
-void adsr_set_gate(adsr_t * x, bool gate)
-{
-    x->gate = gate;
-}
-
 void adsr_process(adsr_t * x)
 {
     int temp = x->working_val;
@@ -126,3 +121,13 @@ void adsr_params_attach(adsr_t * adsr, adsr_params_t * params)
     adsr->params = params;
 }
 
+void adsr_start(adsr_t * x)
+{
+    x->working_val = 0;
+    x->state = ADSR_ATTACK;
+}
+
+void adsr_release(adsr_t * x)
+{
+    x->state = ADSR_RELEASE;
+}

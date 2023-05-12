@@ -12,18 +12,14 @@ bool voice_allocator_note_on(uint8_t channel, uint8_t note, uint8_t * best_voice
 
     if (valloc.active_voices != SYNTH_NUM_VOICES)
     {
-        for (*best_voice = 0; *best_voice < SYNTH_NUM_VOICES; *best_voice++)
+        for (*best_voice = 0; *best_voice < SYNTH_NUM_VOICES; (*best_voice)++)
         {
             if (valloc.note[*best_voice] == 0xff)
             {
                 valloc.active_voices += 1;
                 break;
             }
-            else
-            {
-                while(1)
-                ; //this should not be possible!
-            }
+
         }
     }
     else

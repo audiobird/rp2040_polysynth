@@ -16,22 +16,19 @@ void midi_handle_note_on(struct midi_message * message)
 {
     uint8_t voice = 0;
 
-    //if(!voice_allocator_note_on(message->channel, message->data.note_on.note, &voice))
-    //return;
+    if(!voice_allocator_note_on(message->channel, message->data.note_on.note, &voice))
+    return;
 
     //yea. trigger da note
     voice_note_on(voice, message->channel, message->data.note_on.note, message->data.note_on.velocity);
-
-
-
 }
 
 void midi_handle_note_off(struct midi_message * message)
 {
     uint8_t voice = 0;
 
-    //if (!voice_allocator_note_off(message->channel, message->data.note_off.note, &voice))
-    //return;
+    if (!voice_allocator_note_off(message->channel, message->data.note_off.note, &voice))
+    return;
 
     //trigger the note off.
     voice_note_off(voice);
@@ -57,7 +54,11 @@ int32_t core_0_process_audio_rate()
 void core_0_process_audio_params()
 {
     for(int x = 0; x < SYNTH_NUM_VOICES; x++)
-    voice_process_params(x);
+    {
+        voice_main(x);
+        voice_process_params(x);
+    }
+   
 }
 
 void core_0()
