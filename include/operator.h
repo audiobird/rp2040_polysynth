@@ -28,5 +28,6 @@ void operator_params_attach(operator_t * o, operator_params_t * params);
 void operator_process_params(operator_t * o, int8_t midi_note);
 void operator_process_audio(operator_t * o, uint8_t voice, uint8_t op);
 void operator_init(operator_t * o, operator_params_t * params);
+void operator_start(operator_t * o);
 
 #endif

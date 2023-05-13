@@ -30,3 +30,8 @@ void operator_init(operator_t * o, operator_params_t * params)
     vca_params_attach(&o->vca, &params->vca_params);
     adsr_params_attach(&o->amp_adsr, &params->amp_adsr_params);
 }
+
+void operator_start(operator_t * o)
+{
+    adsr_start(&o->amp_adsr);   
+}

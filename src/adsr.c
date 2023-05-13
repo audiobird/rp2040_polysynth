@@ -124,6 +124,7 @@ void adsr_params_attach(adsr_t * adsr, adsr_params_t * params)
 void adsr_start(adsr_t * x)
 {
     x->working_val = 0;
+    x->out_val = 0;
     x->state = ADSR_ATTACK;
 }
 

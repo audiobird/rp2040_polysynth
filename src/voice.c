@@ -20,18 +20,20 @@ void voice_note_off(uint8_t voice)
 
 void voice_main(uint8_t voice)
 {
+    bool prev_gate[SYNTH_NUM_VOICES] = {1};
+
     voice_t* x = &v[voice];
 
-    if(x->gate == x->prev_gate)
+    if(x->gate == prev_gate[voice])
     return;
 
-    x->prev_gate = x->gate;
+    prev_gate[voice] = x->gate;
 
     if (x->gate)
     {
         voice_attach_params(voice, x->timbre);
-        adsr_start(&x->operator[0].amp_adsr);
-        adsr_start(&x->operator[1].amp_adsr); 
+        operator_start(&x->operator[0]);
+        operator_start(&x->operator[1]);
     }
     else
     {
@@ -52,7 +54,7 @@ void voice_process_audio(uint8_t voice)
 {
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_process_audio(&v->operator[op], voice, op);
+        operator_process_audio(&v[voice].operator[op], voice, op);
     }
     bit_crusher_process_audio(&v[voice].bit_crusher, voice);
     rate_reducer_process_audio(&v[voice].rate_reducer, voice);
@@ -173,6 +175,26 @@ void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg)
     adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_S, 64);
     adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_R, 4);
 
+    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_A, 127);
+    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_D, 3);
+    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_S, 32);
+    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_R, 16);
+
     params[0].op_params[0].vca_params.gain = 65535;
     
+}
+
+void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
+{
+    switch (controller)
+    {
+        case 0: vca_params_set_gain(&params[timbre].op_params[1].vca_params, value); break;
+        case 1: bit_crusher_params_set_amount(&params[timbre].bc_params, value); break;
+        case 2: rate_reducer_params_set_amount(&params[timbre].rr_params, value); break;
+        case 3: sine_osc_params_set_mod_amount(&params[timbre].op_params[0].sine_osc_params, value); break;
+        case 4: sine_osc_params_set_mod_amount(&params[timbre].op_params[1].sine_osc_params, value); break;
+        case 5: sine_osc_params_set_transpose(&params[timbre].op_params[1].sine_osc_params, value); break;
+        case 6: break;
+        case 7: break;
+    }
 }

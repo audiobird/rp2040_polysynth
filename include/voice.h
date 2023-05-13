@@ -31,7 +31,6 @@ typedef struct voice
     uint8_t velocity;
     int16_t pitch_bend;
     bool gate;
-    bool prev_gate;
 } voice_t;
 
 void voice_process_params(uint8_t voice);
@@ -44,5 +43,6 @@ void voice_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity
 void voice_note_off(uint8_t voice);
 
 void voice_main(uint8_t voice);
+void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value);
 
 #endif

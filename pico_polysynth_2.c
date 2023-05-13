@@ -36,7 +36,7 @@ void midi_handle_note_off(struct midi_message * message)
 
 void midi_handle_cc(struct midi_message * message)
 {
-   
+   voice_handle_cc(message->channel, message->data.control_change.controller, message->data.control_change.value);
 }
 
 int32_t core_0_process_audio_rate()
@@ -92,10 +92,10 @@ void core_1()
 {
     midi_input_driver_init();
 
-    voice_init(0, 0, 0);
-    voice_init(1, 0, 0);
-    voice_init(2, 0, 0);
-    voice_init(3, 0, 0);
+    voice_init(0, 0, 2);
+    voice_init(1, 0, 2);
+    voice_init(2, 0, 2);
+    voice_init(3, 0, 2);
 
     wait = 0;
 
