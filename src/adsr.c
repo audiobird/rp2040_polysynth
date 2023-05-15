@@ -1,6 +1,5 @@
 #include "adsr.h"
 #include "math.h"
-#include "tables/log_table.h"
 #include "tables/exp_table.h"
 
 static inline uint16_t adsr_midi_to_rate(uint8_t mval)
@@ -39,6 +38,11 @@ inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t adsr, uint8_t m
         case ADSR_P_S: adsr_params_set_sustain(x, m_val);   break;
         case ADSR_P_R: adsr_params_set_release(x, m_val);   break;
     }
+}
+
+inline void adsr_params_set_exp(adsr_params_t * x, uint8_t m_val)
+{
+    x->exp = m_val >= 64;
 }
 
 void adsr_process(adsr_t * x)
@@ -98,7 +102,11 @@ void adsr_process(adsr_t * x)
     }
 
     x->working_val = temp;
+
+    if (x->params->exp)
     x->out_val = exp_table[temp];
+    else
+    x->out_val = temp;
 }
 
 inline bool adsr_is_open(adsr_t * x)

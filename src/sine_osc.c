@@ -33,7 +33,7 @@ void sine_osc_params_set_octave_offset(sine_osc_params_t * p, int8_t m_val)
 void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t m_val)
 {
     m_val -= 64;
-    p->transpose = clamp(m_val, -11, 11);
+    p->transpose = clamp(m_val, -12, 12);
 }
 
 void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t m_val)

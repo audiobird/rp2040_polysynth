@@ -27,7 +27,7 @@ void ring_mod_process_audio(ring_mod_t * ring_mod, uint8_t voice)
     audio_set_dst_phase(voice, rm_dst, audio_sum_and_clamp(a[0], a[1]));    
 }
 
-void ring_mod_params_set_enable(ring_mod_params_t * params, bool enabled)
+void ring_mod_params_set_enable(ring_mod_params_t * params, uint8_t m_val)
 {
-    params->enabled = enabled;
+    params->enabled = m_val >= 64;
 }

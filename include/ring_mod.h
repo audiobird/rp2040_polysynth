@@ -18,7 +18,6 @@ typedef struct ring_mod
 void ring_mod_params_attach(ring_mod_t * ring_mod, ring_mod_params_t * params);
 void ring_mod_process_audio(ring_mod_t * ring_mod, uint8_t voice);
 
-void ring_mod_params_set_enable(ring_mod_params_t * params, bool enabled);
-
+void ring_mod_params_set_enable(ring_mod_params_t * params, uint8_t m_val);
 
 #endif

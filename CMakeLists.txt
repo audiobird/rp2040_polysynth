@@ -62,8 +62,6 @@ include/tables/phase_step_table.c
 include/tables/phase_step_table.h
 include/tables/sine_table.c
 include/tables/sine_table.h
-include/tables/log_table.c
-include/tables/log_table.h
 include/adsr.h
 include/mcp4921.h
 include/midi_input_driver.h
@@ -121,7 +119,6 @@ DIVIDE_ACCURATE
 
 add_custom_target(
     table_generators
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/log_table_gen > ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/log_table.c
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/sin_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${WAVE_TABLE_BIT_WIDTH} ${WAVE_TABLE_SAMPLE_DEPTH}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/phase_step_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${PHASE_STEP_TABLE_BIT_SIZE} ${AUDIO_SAMPLE_RATE}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/utils/bin/exp_table_gen ${CMAKE_CURRENT_SOURCE_DIR}/include/tables/ ${EXP_CURVE}
