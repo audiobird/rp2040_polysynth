@@ -10,14 +10,14 @@ void bit_crusher_params_attach(bit_crusher_t * bc, bit_crusher_params_t * params
 
 void bit_crusher_params_set_amount(bit_crusher_params_t * params, int8_t m_val)
 {
-    params->amount = clamp(m_val, 0, 15);
+    params->mask = ~((0 << 15) | (m_val << 8) | (m_val << 1) | (m_val >> 6));
 }
 
 void bit_crusher_process_audio(bit_crusher_t * bc, uint8_t voice)
 {
     audio_input_t a = audio_get_src_phase(voice, bc->params->src);
 
-    a &= 0xfffffffful << bc->params->amount;
+    a &= bc->params->mask;
 
     audio_set_dst_phase(voice, bc_dst, a);
 }

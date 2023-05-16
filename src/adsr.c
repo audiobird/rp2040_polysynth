@@ -2,6 +2,8 @@
 #include "math.h"
 #include "tables/exp_table.h"
 
+static adsr_t adsr[SYNTH_NUM_VOICES][SYNTH_OPERATORS_PER_VOICE][ADSR_TYPE_CNT];
+
 static inline uint16_t adsr_midi_to_rate(uint8_t mval)
 {
     return exp_table[mval << 9] + 1;
@@ -29,9 +31,9 @@ static inline void adsr_params_set_release(adsr_params_t * x, uint8_t m_val)
     x->r = adsr_midi_to_rate(m_val);
 }
 
-inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t adsr, uint8_t m_val)
+inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t stage, uint8_t m_val)
 {
-    switch (adsr)
+    switch (stage)
     {
         case ADSR_P_A: adsr_params_set_attack(x, m_val);    break;
         case ADSR_P_D: adsr_params_set_decay(x, m_val);     break;
@@ -45,8 +47,10 @@ inline void adsr_params_set_exp(adsr_params_t * x, uint8_t m_val)
     x->exp = m_val >= 64;
 }
 
-void adsr_process(adsr_t * x)
+void adsr_process(uint8_t voice, uint8_t op, adsr_types_t type)
 {
+    adsr_t * x = &adsr[voice][op][type];
+
     int temp = x->working_val;
     int rate;
 
@@ -95,10 +99,7 @@ void adsr_process(adsr_t * x)
             break;
         }
         case ADSR_OFF:
-        {
-            temp = 0;
-            break;
-        }
+        break;
     }
 
     x->working_val = temp;
@@ -109,34 +110,35 @@ void adsr_process(adsr_t * x)
     x->out_val = temp;
 }
 
-inline bool adsr_is_open(adsr_t * x)
+inline bool adsr_is_open(uint8_t voice, uint8_t op, adsr_types_t type)
 {
-    return x->working_val > 0;
+    return adsr[voice][op][type].working_val > 0;
 }
 
-inline bool adsr_is_off(adsr_t * x)
+inline bool adsr_is_off(uint8_t voice, uint8_t op, adsr_types_t type)
 {
-    return !adsr_is_open(x);
+    return !adsr_is_open(voice, op, type);
 }
 
-int32_t adsr_get_output(adsr_t * x)
+int32_t adsr_get_output(uint8_t voice, uint8_t op, adsr_types_t type)
 {
-    return x->out_val;
+    return adsr[voice][op][type].out_val;
 }
 
-void adsr_params_attach(adsr_t * adsr, adsr_params_t * params)
+void adsr_params_attach(uint8_t voice, uint8_t op, adsr_types_t type, adsr_params_t * params)
 {
-    adsr->params = params;
+    adsr[voice][op][type].params = params;
 }
 
-void adsr_start(adsr_t * x)
+void adsr_start(uint8_t voice, uint8_t op, adsr_types_t type)
 {
+    adsr_t * x = &adsr[voice][op][type];
     x->working_val = 0;
     x->out_val = 0;
     x->state = ADSR_ATTACK;
 }
 
-void adsr_release(adsr_t * x)
+void adsr_release(uint8_t voice, uint8_t op, adsr_types_t type)
 {
-    x->state = ADSR_RELEASE;
+    adsr[voice][op][type].state = ADSR_RELEASE;
 }

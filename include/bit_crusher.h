@@ -8,7 +8,7 @@
 
 typedef struct bit_crusher_params
 {
-    int8_t amount;
+    uint16_t mask;
     signal_src_t src;
 } bit_crusher_params_t;
 

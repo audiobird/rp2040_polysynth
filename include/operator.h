@@ -11,6 +11,7 @@
 typedef struct operator_params
 {
     adsr_params_t amp_adsr_params;
+    adsr_params_t pitch_asr_params;
     vca_params_t vca_params;
     sine_osc_params_t sine_osc_params;
     signal_src_t src;
@@ -20,13 +21,14 @@ typedef struct operator
 {
     operator_params_t * params;
     adsr_t amp_adsr;
+    adsr_t pitch_asr;
     vca_t vca;
     sine_osc_t sine_osc;
 } operator_t;
 
-void operator_params_attach(operator_t * o, operator_params_t * params);
-void operator_process_params(operator_t * o, int8_t midi_note);
-void operator_process_audio(operator_t * o, uint8_t voice, uint8_t op);
+void operator_params_attach(uint8_t voice, uint8_t op, operator_params_t * params);
+void operator_process_params(uint8_t voice, int8_t midi_note);
+void operator_process_audio(uint8_t voice);
 void operator_init(operator_t * o, operator_params_t * params);
 void operator_start(operator_t * o);
 
