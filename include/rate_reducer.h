@@ -10,15 +10,8 @@ typedef struct rate_reducer_params
     signal_src_t src;
 } rate_reducer_params_t;
 
-typedef struct rate_reducer
-{
-    uint8_t counter;
-    rate_reducer_params_t * params;
-    audio_output_t a_out;
-} rate_reducer_t;
-
-void rate_reducer_params_attach(rate_reducer_t * rr, rate_reducer_params_t * params);
+void rate_reducer_params_attach(uint8_t voice, rate_reducer_params_t * params);
 void rate_reducer_params_set_amount(rate_reducer_params_t * params, int8_t m_val);
-void rate_reducer_process_audio(rate_reducer_t * rr, uint8_t voice);
+void rate_reducer_process(uint8_t voice);
 
 #endif

@@ -2,6 +2,7 @@
 #define __ADSR_H__
 
 #include <pico/stdio.h>
+#include "a_io.h"
 
 typedef enum adsr_state
 {
@@ -34,6 +35,7 @@ typedef struct adsr_params
     uint16_t s;
     uint16_t r;    
     bool exp;
+    signal_src_t src;
 } adsr_params_t;
 
 typedef struct adsr
@@ -50,7 +52,8 @@ void adsr_params_set(adsr_params_t * x, adsr_midi_param_t stage, uint8_t m_val);
 
 void adsr_params_set_exp(adsr_params_t * x, uint8_t m_val);
 
-void adsr_process(uint8_t voice, uint8_t op, adsr_types_t type);
+void adsr_process_envelope(uint8_t voice, uint8_t op, adsr_types_t type);
+void adsr_process_audio(uint8_t voice, uint8_t op);
 
 bool adsr_is_open(uint8_t voice, uint8_t op, adsr_types_t type);
 
@@ -58,7 +61,7 @@ bool adsr_is_off(uint8_t voice, uint8_t op, adsr_types_t type);
 
 int32_t adsr_get_output(uint8_t voice, uint8_t op, adsr_types_t type);
 
-void adsr_start(uint8_t voice, uint8_t op, adsr_types_t type);
-void adsr_release(uint8_t voice, uint8_t op, adsr_types_t type);
+void adsr_trig_voice(uint8_t voice);
+void adsr_release_voice(uint8_t voice);
 
 #endif

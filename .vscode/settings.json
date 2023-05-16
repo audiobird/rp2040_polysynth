@@ -24,7 +24,8 @@
       "voice.h": "c",
       "stdlib.h": "c",
       "exp_table.h": "c",
-      "mcp4921.h": "c"
+      "mcp4921.h": "c",
+      "phasor.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cortex-debug.variableUseNaturalFormat": true,

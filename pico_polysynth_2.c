@@ -92,10 +92,10 @@ void core_1()
 {
     midi_input_driver_init();
 
-    voice_init(0, 0, 2);
-    voice_init(1, 0, 2);
-    voice_init(2, 0, 2);
-    voice_init(3, 0, 2);
+    voice_init(0, 0, 0);
+    voice_init(1, 0, 0);
+    voice_init(2, 0, 0);
+    voice_init(3, 0, 0);
 
     wait = 0;
 

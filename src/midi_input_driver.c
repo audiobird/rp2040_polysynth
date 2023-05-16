@@ -3,7 +3,7 @@
 struct midi_istream midi_input[NUM_MIDI_INPUTS];
 uint8_t sysex_buffer[NUM_MIDI_INPUTS][SIZE_OF_SYSEX_BUFFER]; 
 
-static size_t read_uart_0(uint8_t *data)
+static inline size_t read_uart_0(uint8_t *data)
 {    
     //it doesnt matter if this data is garbage.
     //it will be handeled based on the return value of "size"
@@ -25,7 +25,7 @@ void midi_input_driver_init()
     midi_input[0].read_cb = read_uart_0;
 }
 
-void midi_input_driver_read()
+inline void midi_input_driver_read()
 {
     struct midi_message *message = midi_decode(&midi_input[0]);
 

@@ -31,7 +31,7 @@
 
 /**@{*/
 
-static int data_size(struct midi_message *msg)
+static inline int data_size(struct midi_message *msg)
 {
 	int length;
 
@@ -61,7 +61,7 @@ static int data_size(struct midi_message *msg)
 	return length;
 }
 
-static bool decode_data(struct midi_message *msg, uint8_t c, int bytes_left)
+static inline bool decode_data(struct midi_message *msg, uint8_t c, int bytes_left)
 {
 	switch (msg->type) {
 	case MIDI_TYPE_NOTE_ON:
@@ -123,7 +123,7 @@ static bool decode_data(struct midi_message *msg, uint8_t c, int bytes_left)
 	return (bytes_left == 1);
 }
 
-static bool is_realtime_message(int type)
+static inline bool is_realtime_message(int type)
 {
 	bool is_rt;
 
@@ -144,7 +144,7 @@ static bool is_realtime_message(int type)
 	return is_rt;
 }
 
-static bool read_byte(struct midi_istream *stream, uint8_t *c)
+static inline bool read_byte(struct midi_istream *stream, uint8_t *c)
 {
 	return (stream->read_cb(c) == 1);
 }
@@ -160,7 +160,7 @@ static bool read_byte(struct midi_istream *stream, uint8_t *c)
  * @return Pointer to a decoded message (allocated in #midi_istream) or `NULL`
  * if the message has not been decoded yet.
  */
-struct midi_message *midi_decode(struct midi_istream *stream)
+inline struct midi_message *midi_decode(struct midi_istream *stream)
 {
 	assert(stream != NULL);
 	assert(stream->read_cb != NULL);

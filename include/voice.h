@@ -2,36 +2,24 @@
 #define __VOICE_H__
 
 #include <pico/stdio.h>
-#include "operator.h"
+#include "sine_osc.h"
+#include "vca.h"
+#include "adsr.h"
 #include "bit_crusher.h"
 #include "rate_reducer.h"
 #include "ring_mod.h"
 #include "signal.h"
-#include "trig_gate.h"
 
 typedef struct voice_params
 {
-    operator_params_t op_params[SYNTH_OPERATORS_PER_VOICE];
-    bit_crusher_params_t bc_params;
-    rate_reducer_params_t rr_params;
-    ring_mod_params_t rm_params;
+    sine_osc_params_t osc_p[SYNTH_OPERATORS_PER_VOICE];
+    vca_params_t vca_p[SYNTH_OPERATORS_PER_VOICE];
+    adsr_params_t adsr_p[SYNTH_OPERATORS_PER_VOICE][ADSR_TYPE_CNT];
+    bit_crusher_params_t bc_p;
+    rate_reducer_params_t rr_p;
+    ring_mod_params_t rm_p;
     signal_src_t src;
 } voice_params_t;
-
-typedef struct voice
-{
-    operator_t operator[SYNTH_OPERATORS_PER_VOICE];
-    rate_reducer_t rate_reducer;
-    bit_crusher_t bit_crusher;
-    ring_mod_t ring_mod;
-
-    voice_params_t * params;
-    uint8_t timbre;
-    int8_t midi_note;
-    uint8_t velocity;
-    int16_t pitch_bend;
-    bool gate;
-} voice_t;
 
 void voice_process_params(uint8_t voice);
 void voice_process_audio(uint8_t voice);

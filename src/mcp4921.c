@@ -42,18 +42,18 @@ void mcp4921_init()
     interp1->base[1] = 2047;
 }
 
-int16_t clamp(int32_t samp)
+static inline int16_t clamp(int32_t samp)
 {
     interp1->accum[0] = samp;
     return (int16_t)interp1->peek[0];
 }
 
-bool mcp4921_is_busy()
+inline bool mcp4921_is_busy()
 {
     return dma_channel_is_busy(mcp4921_dma_chan);
 }
 
-void mcp4921_send_buffer(int32_t * samples)
+inline void mcp4921_send_buffer(int32_t * samples)
 {
     while(mcp4921_is_busy())
     ;
@@ -67,7 +67,7 @@ void mcp4921_send_buffer(int32_t * samples)
     dma_channel_start(mcp4921_dma_chan);   
 }
 
-int32_t mcp4921_get_timestamp()
+inline int32_t mcp4921_get_timestamp()
 {
     return SAMPLE_BUFFER_SIZE - dma_hw->ch[mcp4921_dma_chan].transfer_count;
 }

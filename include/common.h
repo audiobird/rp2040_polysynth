@@ -48,4 +48,10 @@ static inline int32_t audio_sum_and_clamp(const int32_t x, const int32_t y)
     return clamp(x + y, INT32_MIN, INT32_MAX); 
 }
 
+static inline bool midi_to_switch(const int8_t m_val);
+static inline bool midi_to_switch(const int8_t m_val)
+{
+    return m_val >= 64;
+}
+
 #endif

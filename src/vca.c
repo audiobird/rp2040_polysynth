@@ -2,9 +2,11 @@
 #include "common.h"
 #include "tables/exp_table.h"
 
-const signal_dst_t vca_dst[SYNTH_OPERATORS_PER_VOICE] = {SRC_VCA0, SRC_VCA1};
+static const signal_dst_t vca_dst[SYNTH_OPERATORS_PER_VOICE] = {SRC_VCA0, SRC_VCA1};
 
-void vca_params_set_gain(vca_params_t * params, int8_t m_val)
+static vca_t v[SYNTH_NUM_VOICES][SYNTH_OPERATORS_PER_VOICE];
+
+inline void vca_params_set_gain(vca_params_t * params, int8_t m_val)
 {
     uint16_t x = m_val << 9;
     x |= m_val << 2;
@@ -12,14 +14,14 @@ void vca_params_set_gain(vca_params_t * params, int8_t m_val)
     params->gain = exp_table[x];
 }
 
-void vca_process(vca_t * vca, uint8_t voice, uint8_t op)
+inline void vca_process(uint8_t voice, uint8_t op)
 {
-    audio_input_t x = audio_get_src_phase(voice, vca->params->src);
-    x = multiply_and_scale(x, vca->params->gain, 16);
+    audio_input_t x = audio_get_src_phase(voice, v[voice][op].params->src);
+    x = multiply_and_scale(x, v[voice][op].params->gain, 16);
     audio_set_dst_phase(voice, vca_dst[op], x);
 }
 
-void vca_params_attach(vca_t * vca, vca_params_t * params)
+inline void vca_params_attach(uint8_t voice, uint8_t op, vca_params_t * params)
 {
-    vca->params = params;
+    v[voice][op].params = params;
 }

@@ -5,16 +5,15 @@
 
 typedef enum 
 {
-    SRC_OP0,
-    SRC_OP1,
     SRC_OSC0,
     SRC_OSC1,
     SRC_VCA0,
     SRC_VCA1,
+    SRC_ADSR0,
+    SRC_ADSR1,
     SRC_RM,
     SRC_BC,
     SRC_RR,
-    SRC_VOICE,
     SRC_CNT,
 } signal_src_t;
 

@@ -1,65 +1,41 @@
 #include "voice.h"
 
-const signal_dst_t voice_dst = SRC_VOICE;
+typedef struct voice
+{
+    voice_params_t * params;
+    uint8_t timbre;
+    uint8_t velocity;
+    int16_t pitch_bend;
+    int8_t midi_note;
+    bool gate;
+    audio_output_t out;
+} voice_t;
 
-voice_t v[SYNTH_NUM_VOICES];
+static voice_t v[SYNTH_NUM_VOICES];
+
 voice_params_t params[SYNTH_NUM_TIMBRES] = 
 {
     {
-        //patch one
-        .bc_params.src = SRC_OP0,
-        .op_params[0].sine_osc_params.src = SRC_OP1,
-        .op_params[0].src = SRC_VCA0,
-        .op_params[0].vca_params.src = SRC_OSC0,
-        .op_params[1].sine_osc_params.src = SRC_OSC1,
-        .op_params[1].src = SRC_VCA1,
-        .op_params[1].vca_params.src = SRC_OSC1,
-        .rm_params.src[0] = SRC_RM,
-        .rm_params.src[1] = SRC_RM,
-        .rr_params.src = SRC_BC,
-        .src = SRC_RR,
-    },
-    {
-        //2
-        .bc_params.src = SRC_OP1,
-        .op_params[0].sine_osc_params.src = SRC_BC,
-        .op_params[0].src = SRC_VCA0,
-        .op_params[0].vca_params.src = SRC_OSC0,
-        .op_params[1].sine_osc_params.src = SRC_RR,
-        .op_params[1].src = SRC_VCA1,
-        .op_params[1].vca_params.src = SRC_OSC1,
-        .rm_params.src[0] = SRC_RM,
-        .rm_params.src[1] = SRC_RM,
-        .rr_params.src = SRC_OP0,
-        .src = SRC_OP0,
-    },
-    {
-        //3
-        .bc_params.src = SRC_OP0,
-        .op_params[0].sine_osc_params.src = SRC_RR,
-        .op_params[0].src = SRC_VCA0,
-        .op_params[0].vca_params.src = SRC_OSC0,
-        .op_params[1].sine_osc_params.src = SRC_BC,
-        .op_params[1].src = SRC_VCA1,
-        .op_params[1].vca_params.src = SRC_RR,
-        .rm_params.src[0] = SRC_BC,
-        .rm_params.src[1] = SRC_RR,
-        .rr_params.src = SRC_OSC1,
-        .src = SRC_RM,
-    },
-    {
-        //4
-        .bc_params.src = SRC_OP0,
-        .op_params[0].sine_osc_params.src = SRC_RM,
-        .op_params[0].src = SRC_VCA0,
-        .op_params[0].vca_params.src = SRC_OSC0,
-        .op_params[1].sine_osc_params.src = SRC_RR,
-        .op_params[1].src = SRC_VCA1,
-        .op_params[1].vca_params.src = SRC_OSC1,
-        .rm_params.src[0] = SRC_OSC0,
-        .rm_params.src[1] = SRC_OP1,
-        .rr_params.src = SRC_BC,
-        .src = SRC_RR,
+        .src = SRC_BC,
+        .bc_p.src = SRC_RR,
+        .rr_p.src = SRC_VCA0,
+        .vca_p[0].src = SRC_ADSR0,
+        .adsr_p[0][ADSR_TYPE_AMP].src = SRC_OSC0,
+        .osc_p[0].src = SRC_VCA1,
+        .vca_p[1].src = SRC_ADSR1,
+        .adsr_p[1][ADSR_TYPE_AMP].src = SRC_OSC1,
+        .osc_p[1].src = SRC_OSC1,
+        .rm_p.src[0] = SRC_RM,
+        .rm_p.src[1] = SRC_RM,
+        
+        .adsr_p[0 ... 1][0 ... 1].a = 1024,
+        .adsr_p[0 ... 1][0 ... 1].d = 32,
+        .adsr_p[0 ... 1][0 ... 1].s = 48800,
+        .adsr_p[0 ... 1][0 ... 1].r = 64,
+        .adsr_p[0 ... 1][0 ... 1].exp = 1,
+        .osc_p[0 ... 1].track_pitch = 1,
+        .vca_p[0 ... 1].gain = 65535,
+        .bc_p.mask = 0xffff,
     },
 };
 
@@ -78,7 +54,7 @@ void voice_note_off(uint8_t voice)
 
 void voice_main(uint8_t voice)
 {
-    bool prev_gate[SYNTH_NUM_VOICES] = {1};
+    static bool prev_gate[SYNTH_NUM_VOICES] = {1};
 
     voice_t* x = &v[voice];
 
@@ -90,13 +66,12 @@ void voice_main(uint8_t voice)
     if (x->gate)
     {
         voice_attach_params(voice, x->timbre);
-        operator_start(&x->operator[0]);
-        operator_start(&x->operator[1]);
+        adsr_trig_voice(voice);
+        sine_osc_voice_set_midi_note(voice, x->midi_note);
     }
     else
     {
-        adsr_release(&x->operator[0].amp_adsr);
-        adsr_release(&x->operator[1].amp_adsr); 
+        adsr_release_voice(voice);
     }
 }
 
@@ -104,7 +79,11 @@ void voice_process_params(uint8_t voice)
 {
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_process_params(&v[voice].operator[op], v[voice].midi_note);
+        for (int adsr = 0; adsr < ADSR_TYPE_CNT; adsr++)
+        {
+            adsr_process_envelope(voice, op, adsr);
+            sine_osc_process_params(voice, op);
+        }
     }
 }
 
@@ -112,22 +91,23 @@ void voice_process_audio(uint8_t voice)
 {
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_process_audio(&v[voice].operator[op], voice, op);
+        sine_osc_process(voice, op);
+        vca_process(voice, op);
+        adsr_process_audio(voice, op);
     }
-    bit_crusher_process_audio(&v[voice].bit_crusher, voice);
-    rate_reducer_process_audio(&v[voice].rate_reducer, voice);
-    ring_mod_process_audio(&v[voice].ring_mod, voice);
-    audio_set_dst_phase(voice, voice_dst, audio_get_src_phase(voice, v[voice].params->src));
+    bit_crusher_process_audio(voice);
+    rate_reducer_process(voice);
+    ring_mod_process_audio(voice);
+
+    v[voice].out = audio_get_src_phase(voice, v[voice].params->src);
 }
 
 audio_output_t voice_get_all()
 {
-    audio_output_t o;
+    audio_output_t o = 0;
 
-    o  = audio_get_src_phase(0, SRC_VOICE);
-    o += audio_get_src_phase(1, SRC_VOICE);
-    o += audio_get_src_phase(2, SRC_VOICE);
-    o += audio_get_src_phase(3, SRC_VOICE);
+    for (int x = 0; x < SYNTH_NUM_VOICES; x++)
+    o += v[x].out;
 
     return o;
 }
@@ -143,25 +123,15 @@ void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg)
 
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
-        operator_init(&v[voice].operator[op], &params[timbre].op_params[op]);
+        sine_osc_params_attach(voice, op, &params[timbre].osc_p[op]);
+        adsr_params_attach(voice, op, 0, &params[timbre].adsr_p[op][0]);
+        adsr_params_attach(voice, op, 1, &params[timbre].adsr_p[op][1]);
+        vca_params_attach(voice, op, &params[timbre].vca_p[op]);
     }
     
-    bit_crusher_params_attach(&v[voice].bit_crusher, &params[timbre].bc_params);
-    rate_reducer_params_attach(&v[voice].rate_reducer, &params[timbre].rr_params);
-    ring_mod_params_attach(&v[voice].ring_mod, &params[timbre].rm_params);
-
-    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_A, 16);
-    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_D, 8);
-    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_S, 64);
-    adsr_params_set(&params[0].op_params[0].amp_adsr_params, ADSR_P_R, 4);
-
-    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_A, 127);
-    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_D, 3);
-    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_S, 32);
-    adsr_params_set(&params[0].op_params[1].amp_adsr_params, ADSR_P_R, 16);
-
-    params[0].op_params[0].vca_params.gain = 65535;
-    
+    bit_crusher_params_attach(voice, &params[timbre].bc_p);
+    rate_reducer_params_attach(voice, &params[timbre].rr_p);
+    ring_mod_params_attach(voice, &params[timbre].rm_p);
 }
 
 enum cc_map 
@@ -172,8 +142,14 @@ enum cc_map
     CC_RELEASE_OP_1,
     CC_ADSR_EXP_OP_1,
 
+    CC_ATTACK_P_OP_1,
+    CC_DECAY_P_OP_1,
+    CC_SUSTAIN_P_OP_1,
+    CC_RELEASE_P_OP_1,
+
     CC_LEVEL_OP_1,
 
+    CC_PITCH_TRACK_OP_1,
     CC_OCTAVE_OP_1,
     CC_TRANSPOSE_OP_1,
     CC_FINE_TUNE_OP_1,
@@ -185,8 +161,14 @@ enum cc_map
     CC_RELEASE_OP_2,
     CC_ADSR_EXP_OP_2,
 
+    CC_ATTACK_P_OP_2,
+    CC_DECAY_P_OP_2,
+    CC_SUSTAIN_P_OP_2,
+    CC_RELEASE_P_OP_2,
+
     CC_LEVEL_OP_2,
 
+    CC_PITCH_TRACK_OP_2,
     CC_OCTAVE_OP_2,
     CC_TRANSPOSE_OP_2,
     CC_FINE_TUNE_OP_2,
@@ -203,78 +185,98 @@ void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
 
     switch (controller)
     {
+        case CC_ATTACK_P_OP_1:
+        case CC_DECAY_P_OP_1:
+        case CC_SUSTAIN_P_OP_1:
+        case CC_RELEASE_P_OP_1:
+        break;
+
+        case CC_ATTACK_P_OP_2:
+        case CC_DECAY_P_OP_2:
+        case CC_SUSTAIN_P_OP_2:
+        case CC_RELEASE_P_OP_2:
+        break;
+
+        case CC_PITCH_TRACK_OP_1:
+        sine_osc_params_set_pitch_tracking(&p->osc_p[0], value);
+        break;
+
+        case CC_PITCH_TRACK_OP_2:
+        sine_osc_params_set_pitch_tracking(&p->osc_p[1], value);
+        break;
+
         case CC_ATTACK_OP_1: 
         case CC_DECAY_OP_1:
         case CC_SUSTAIN_OP_1:
         case CC_RELEASE_OP_1:
-        adsr_params_set(&p->op_params[0].amp_adsr_params, controller - CC_ATTACK_OP_1, value);
+        adsr_params_set(&p->adsr_p[0][ADSR_TYPE_AMP], controller - CC_ATTACK_OP_1, value);
         break;
 
         case CC_ADSR_EXP_OP_1:
-        adsr_params_set_exp(&p->op_params[0].amp_adsr_params, value);
+        adsr_params_set_exp(&p->adsr_p[0][ADSR_TYPE_AMP], value);
         break;
 
         case CC_LEVEL_OP_1:
-        vca_params_set_gain(&p->op_params[0].vca_params, value);
+        vca_params_set_gain(&p->vca_p[0], value);
         break;
 
         case CC_OCTAVE_OP_1:
-        sine_osc_params_set_octave_offset(&p->op_params[0].sine_osc_params, value);
+        sine_osc_params_set_octave_offset(&p->osc_p[0], value);
         break;
 
         case CC_TRANSPOSE_OP_1:
-        sine_osc_params_set_transpose(&p->op_params[0].sine_osc_params, value);
+        sine_osc_params_set_transpose(&p->osc_p[0], value);
         break;
 
         case CC_FINE_TUNE_OP_1:
-        sine_osc_params_set_fine_offset(&p->op_params[0].sine_osc_params, value);
+        sine_osc_params_set_fine_offset(&p->osc_p[0], value);
         break;
 
         case CC_MOD_DEPTH_OP_1:
-        sine_osc_params_set_mod_amount(&p->op_params[0].sine_osc_params, value);
+        sine_osc_params_set_mod_amount(&p->osc_p[0], value);
         break;
 
         case CC_ATTACK_OP_2:
         case CC_DECAY_OP_2:
         case CC_SUSTAIN_OP_2:
         case CC_RELEASE_OP_2:
-        adsr_params_set(&p->op_params[1].amp_adsr_params, controller - CC_ATTACK_OP_2, value);
+        adsr_params_set(&p->adsr_p[1][ADSR_TYPE_AMP], controller - CC_ATTACK_OP_2, value);
         break;
 
         case CC_ADSR_EXP_OP_2:
-        adsr_params_set_exp(&p->op_params[1].amp_adsr_params, value);
+        adsr_params_set_exp(&p->adsr_p[1][ADSR_TYPE_AMP], value);
         break;
 
         case CC_LEVEL_OP_2:
-        vca_params_set_gain(&p->op_params[1].vca_params, value);
+        vca_params_set_gain(&p->vca_p[1], value);
         break;
 
         case CC_OCTAVE_OP_2:
-        sine_osc_params_set_octave_offset(&p->op_params[1].sine_osc_params, value);
+        sine_osc_params_set_octave_offset(&p->osc_p[1], value);
         break;
 
         case CC_TRANSPOSE_OP_2:
-        sine_osc_params_set_transpose(&p->op_params[1].sine_osc_params, value);
+        sine_osc_params_set_transpose(&p->osc_p[1], value);
         break;
 
         case CC_FINE_TUNE_OP_2:
-        sine_osc_params_set_fine_offset(&p->op_params[1].sine_osc_params, value);
+        sine_osc_params_set_fine_offset(&p->osc_p[1], value);
         break;
 
         case CC_MOD_DEPTH_OP_2:
-        sine_osc_params_set_mod_amount(&p->op_params[1].sine_osc_params, value);
+        sine_osc_params_set_mod_amount(&p->osc_p[1], value);
         break;
 
         case CC_RATE_REDUCE_AMOUNT:
-        rate_reducer_params_set_amount(&p->rr_params, value);
+        rate_reducer_params_set_amount(&p->rr_p, value);
         break;
 
         case CC_BIT_CRUSH_AMOUNT:
-        bit_crusher_params_set_amount(&p->bc_params, value);
+        bit_crusher_params_set_amount(&p->bc_p, value);
         break;
 
         case CC_RING_MOD_ENABLE:
-        ring_mod_params_set_enable(&p->rm_params, value);
+        ring_mod_params_set_enable(&p->rm_p, value);
         break;
     }
 }

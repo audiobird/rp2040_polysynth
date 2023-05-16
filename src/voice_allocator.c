@@ -1,11 +1,11 @@
 #include "voice_allocator.h"
 
-voice_allocation_t valloc = 
+static voice_allocation_t valloc = 
 {
     .note[0 ... SYNTH_NUM_VOICES - 1] = 0xff,
 };
 
-bool voice_allocator_note_on(uint8_t channel, uint8_t note, uint8_t * best_voice)
+inline bool voice_allocator_note_on(uint8_t channel, uint8_t note, uint8_t * best_voice)
 {
     if (valloc.params->method == VALLOC_BLOCK && valloc.active_voices == SYNTH_NUM_VOICES)
     return 0;
@@ -61,7 +61,7 @@ bool voice_allocator_note_on(uint8_t channel, uint8_t note, uint8_t * best_voice
     return 1;
 }
 
-bool voice_allocator_note_off(uint8_t channel, uint8_t note, uint8_t * voice)
+inline bool voice_allocator_note_off(uint8_t channel, uint8_t note, uint8_t * voice)
 {
     for (int x = 0; x < SYNTH_NUM_VOICES; x++)
     {

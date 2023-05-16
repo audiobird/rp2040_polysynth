@@ -13,8 +13,4 @@ inline void audio_set_dst_phase(uint8_t voice, signal_dst_t dst, audio_output_t 
     aio[voice][dst] = phase;
 }
 
-inline void aio_clear_busses(uint8_t voice)
-{
-    memset(aio[voice], 0, sizeof(aio[0]));
-}
 

@@ -1,6 +1,10 @@
 #include "adsr.h"
 #include "math.h"
 #include "tables/exp_table.h"
+#include "common.h"
+#include "a_io.h"
+
+static const signal_dst_t adsr_dst[SYNTH_OPERATORS_PER_VOICE] = {SRC_ADSR0, SRC_ADSR1};
 
 static adsr_t adsr[SYNTH_NUM_VOICES][SYNTH_OPERATORS_PER_VOICE][ADSR_TYPE_CNT];
 
@@ -44,10 +48,10 @@ inline void adsr_params_set(adsr_params_t * x, adsr_midi_param_t stage, uint8_t 
 
 inline void adsr_params_set_exp(adsr_params_t * x, uint8_t m_val)
 {
-    x->exp = m_val >= 64;
+    x->exp = midi_to_switch(m_val);
 }
 
-void adsr_process(uint8_t voice, uint8_t op, adsr_types_t type)
+inline void adsr_process_envelope(uint8_t voice, uint8_t op, adsr_types_t type)
 {
     adsr_t * x = &adsr[voice][op][type];
 
@@ -110,6 +114,13 @@ void adsr_process(uint8_t voice, uint8_t op, adsr_types_t type)
     x->out_val = temp;
 }
 
+inline void adsr_process_audio(uint8_t voice, uint8_t op)
+{
+    audio_output_t x = audio_get_src_phase(voice, adsr[voice][op][ADSR_TYPE_AMP].params->src);
+    x = multiply_and_scale(x, adsr[voice][op][ADSR_TYPE_AMP].out_val, 16);
+    audio_set_dst_phase(voice, adsr_dst[op], x);
+}
+
 inline bool adsr_is_open(uint8_t voice, uint8_t op, adsr_types_t type)
 {
     return adsr[voice][op][type].working_val > 0;
@@ -120,25 +131,36 @@ inline bool adsr_is_off(uint8_t voice, uint8_t op, adsr_types_t type)
     return !adsr_is_open(voice, op, type);
 }
 
-int32_t adsr_get_output(uint8_t voice, uint8_t op, adsr_types_t type)
+inline int32_t adsr_get_output(uint8_t voice, uint8_t op, adsr_types_t type)
 {
     return adsr[voice][op][type].out_val;
 }
 
-void adsr_params_attach(uint8_t voice, uint8_t op, adsr_types_t type, adsr_params_t * params)
+inline void adsr_params_attach(uint8_t voice, uint8_t op, adsr_types_t type, adsr_params_t * params)
 {
     adsr[voice][op][type].params = params;
 }
 
-void adsr_start(uint8_t voice, uint8_t op, adsr_types_t type)
+inline void adsr_trig_voice(uint8_t voice)
 {
-    adsr_t * x = &adsr[voice][op][type];
-    x->working_val = 0;
-    x->out_val = 0;
-    x->state = ADSR_ATTACK;
+    for(int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
+    {
+        for (int type = 0; type < ADSR_TYPE_CNT; type++)
+        {
+            adsr_t * x = &adsr[voice][op][type];
+            x->working_val = 0;
+            x->state = ADSR_ATTACK;
+        }
+    }
 }
 
-void adsr_release(uint8_t voice, uint8_t op, adsr_types_t type)
+inline void adsr_release_voice(uint8_t voice)
 {
-    adsr[voice][op][type].state = ADSR_RELEASE;
+    for(int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
+    {
+        for (int type = 0; type < ADSR_TYPE_CNT; type++)
+        {
+            adsr[voice][op][type].state = ADSR_RELEASE;
+        }
+    }
 }
