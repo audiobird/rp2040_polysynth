@@ -22,12 +22,8 @@ inline void rate_reducer_params_set_amount(rate_reducer_params_t * params, int8_
 
 inline void rate_reducer_process(uint8_t voice)
 {
-    if (!rr[voice].counter)
-    {
-        audio_set_dst_phase(voice, rr_dst, audio_get_src_phase(voice, rr[voice].params->src));
-    }
-
-    rr[voice].counter += 1;
+    if (!rr[voice].counter++)
+    audio_set_dst_phase(voice, rr_dst, audio_get_src_phase(voice, rr[voice].params->src));
 
     if (rr[voice].counter > rr[voice].params->amount)
     rr[voice].counter = 0;

@@ -39,7 +39,7 @@ voice_params_t params[SYNTH_NUM_TIMBRES] =
     },
 };
 
-void voice_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity)
+inline void voice_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity)
 {
     v[voice].timbre = timbre;
     v[voice].midi_note = note;
@@ -47,12 +47,12 @@ void voice_note_on(uint8_t voice, uint8_t timbre, uint8_t note, uint8_t velocity
     v[voice].gate = 1;
 }
 
-void voice_note_off(uint8_t voice)
+inline void voice_note_off(uint8_t voice)
 {
     v[voice].gate = 0;
 }
 
-void voice_main(uint8_t voice)
+inline void voice_process_params(uint8_t voice)
 {
     static bool prev_gate[SYNTH_NUM_VOICES] = {1};
 
@@ -67,27 +67,24 @@ void voice_main(uint8_t voice)
     {
         voice_attach_params(voice, x->timbre);
         adsr_trig_voice(voice);
-        sine_osc_voice_set_midi_note(voice, x->midi_note);
+        sine_osc_trig_voice(voice, x->midi_note);
     }
     else
     {
         adsr_release_voice(voice);
     }
-}
 
-void voice_process_params(uint8_t voice)
-{
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
         for (int adsr = 0; adsr < ADSR_TYPE_CNT; adsr++)
         {
             adsr_process_envelope(voice, op, adsr);
-            sine_osc_process_params(voice, op);
         }
+        sine_osc_process_params(voice, op);
     }
 }
 
-void voice_process_audio(uint8_t voice)
+inline int32_t voice_process_audio(uint8_t voice)
 {
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
@@ -99,20 +96,10 @@ void voice_process_audio(uint8_t voice)
     rate_reducer_process(voice);
     ring_mod_process_audio(voice);
 
-    v[voice].out = audio_get_src_phase(voice, v[voice].params->src);
+    return audio_get_src_phase(voice, v[voice].params->src);
 }
 
-audio_output_t voice_get_all()
-{
-    audio_output_t o = 0;
-
-    for (int x = 0; x < SYNTH_NUM_VOICES; x++)
-    o += v[x].out;
-
-    return o;
-}
-
-void voice_attach_params(uint8_t voice, uint8_t timbre)
+inline void voice_attach_params(uint8_t voice, uint8_t timbre)
 {
     v[voice].params = &params[timbre];
 }
@@ -179,7 +166,7 @@ enum cc_map
     CC_RING_MOD_ENABLE,
 };
 
-void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
+inline void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
 {
     voice_params_t * p = &params[timbre];
 

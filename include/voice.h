@@ -22,15 +22,13 @@ typedef struct voice_params
 } voice_params_t;
 
 void voice_process_params(uint8_t voice);
-void voice_process_audio(uint8_t voice);
+int32_t voice_process_audio(uint8_t voice);
 void voice_attach_params(uint8_t voice, uint8_t timbre);
 void voice_init(uint8_t voice, uint8_t timbre, uint8_t alg);
-audio_output_t voice_get_all();
 
 void voice_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity);
 void voice_note_off(uint8_t voice);
 
-void voice_main(uint8_t voice);
 void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value);
 
 #endif

@@ -44,21 +44,15 @@ int32_t core_0_process_audio_rate()
     int32_t sample = 0;
 
     for (int x = 0; x < SYNTH_NUM_VOICES; x++)
-    {
-        voice_process_audio(x);
-    }
+    sample += voice_process_audio(x);
     
-    return voice_get_all() / SYNTH_NUM_VOICES;
+    return sample / SYNTH_NUM_VOICES;
 }
 
 void core_0_process_audio_params()
 {
     for(int x = 0; x < SYNTH_NUM_VOICES; x++)
-    {
-        voice_main(x);
-        voice_process_params(x);
-    }
-   
+    voice_process_params(x);
 }
 
 void core_0()
@@ -74,18 +68,13 @@ void core_0()
 
     while(1)
     {
-
         core_0_process_audio_params();
 
         for (int x = 0; x < SAMPLE_BUFFER_SIZE; x++)
-        {
-            audio_buffer[x] = core_0_process_audio_rate();
-        }
+        audio_buffer[x] = core_0_process_audio_rate();
 
         mcp4921_send_buffer(audio_buffer);
     }
-
-    while(1);
 }
 
 void core_1()

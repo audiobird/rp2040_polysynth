@@ -50,15 +50,17 @@ static inline void phasor_set_phase_step(uint8_t voice, uint8_t op, uint16_t t)
     o[voice][op].phasor.phase_step = phase_step_table[t];
 }
 
-// phasor_tuning_word_t phasor_create_tuning_word_raw(uint16_t val)
-// {
-//     //14 bits upper 7 == midi note, lower 7 == fine tune
-
-// }
-
-inline void sine_osc_voice_set_midi_note(uint8_t voice, int8_t mnote)
+static inline void sine_osc_voice_set_midi_note(uint8_t voice, int8_t mnote)
 {
     midi_note[voice] = mnote << (PHASE_STEP_TABLE_BIT_SIZE - 7);
+}
+
+inline void sine_osc_trig_voice(uint8_t voice, int8_t mnote)
+{
+    sine_osc_voice_set_midi_note(voice, mnote);
+
+    for (int x = 0; x < SYNTH_OPERATORS_PER_VOICE; x++)
+    phasor_reset_phase(voice, x);
 }
 
 inline void sine_osc_process(uint8_t voice, uint8_t op)
