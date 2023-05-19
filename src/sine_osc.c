@@ -72,13 +72,15 @@ inline void sine_osc_process(uint8_t voice, uint8_t op)
     audio_set_dst_phase(voice, o_dst[op], sine_table[phase]);
 }
 
-inline void sine_osc_process_params(uint8_t voice, uint8_t op)
+inline void sine_osc_process_params(uint8_t voice, uint8_t op, int16_t bend)
 {
     sine_osc_t * x = &o[voice][op];
 
     int tune = x->params->octave_offset + x->params->transpose + x->params->fine_offset;
 
     tune += x->params->track_pitch ? midi_note[voice] : 64 << (PHASE_STEP_TABLE_BIT_SIZE - 7);
+
+    tune += multiply_and_scale(x->params->pitch_bend_amount, bend, 6);
 
     tune = clamp(tune, 0, PHASE_STEP_TABLE_SIZE - 1);
 
@@ -115,6 +117,11 @@ inline void sine_osc_params_set_pitch_tracking(sine_osc_params_t * p, int8_t m_v
 {
     p->track_pitch = midi_to_switch(m_val);
 }
+
+inline void sine_osc_params_set_pitch_bend_amount(sine_osc_params_t * p, int8_t m_val)
+{
+    p->pitch_bend_amount = clamp(m_val, 0, 24);
+}   
 
 inline void sine_osc_params_attach(uint8_t voice, uint8_t op, sine_osc_params_t * params)
 {

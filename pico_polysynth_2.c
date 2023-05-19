@@ -39,6 +39,11 @@ void midi_handle_cc(struct midi_message * message)
    voice_handle_cc(message->channel, message->data.control_change.controller, message->data.control_change.value);
 }
 
+void midi_handle_pitch_bend(struct midi_message * message)
+{
+    voice_handle_pitch_bend(message->channel, message->data.pitch_bend.value - 8192);
+}
+
 int32_t core_0_process_audio_rate()
 {
     int32_t sample = 0;
@@ -81,10 +86,13 @@ void core_1()
 {
     midi_input_driver_init();
 
-    voice_init(0, 0, 0);
-    voice_init(1, 0, 0);
-    voice_init(2, 0, 0);
-    voice_init(3, 0, 0);
+    for(int voice = 0; voice < SYNTH_NUM_VOICES; voice++)
+    {
+        for (int timbre = 0; timbre < SYNTH_NUM_TIMBRES; timbre++)
+        {
+            voice_init(voice, timbre, 0);
+        }
+    }
 
     wait = 0;
 

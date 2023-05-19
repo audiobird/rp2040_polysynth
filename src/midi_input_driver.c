@@ -50,7 +50,11 @@ inline void midi_input_driver_read()
 
             case MIDI_TYPE_CONTROL_CHANGE:
             midi_handle_cc(message);
-            break;            
+            break;         
+
+            case MIDI_TYPE_PITCH_BEND:
+            midi_handle_pitch_bend(message);
+            break;   
         }
         
     }

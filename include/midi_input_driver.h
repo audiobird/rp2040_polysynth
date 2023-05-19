@@ -14,5 +14,6 @@ void midi_input_driver_read();
 void midi_handle_note_on(struct midi_message * message);
 void midi_handle_note_off(struct midi_message * message);
 void midi_handle_cc(struct midi_message * message);
+void midi_handle_pitch_bend(struct midi_message * message);
 
 #endif

@@ -30,5 +30,8 @@ void voice_note_on(uint8_t voice, uint8_t timber, uint8_t note, uint8_t velocity
 void voice_note_off(uint8_t voice);
 
 void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value);
+void voice_handle_pitch_bend(uint8_t timbre, int16_t bend);
+
+
 
 #endif

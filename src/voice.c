@@ -5,7 +5,6 @@ typedef struct voice
     voice_params_t * params;
     uint8_t timbre;
     uint8_t velocity;
-    int16_t pitch_bend;
     int8_t midi_note;
     bool gate;
     audio_output_t out;
@@ -13,8 +12,32 @@ typedef struct voice
 
 static voice_t v[SYNTH_NUM_VOICES];
 
+static int16_t pitch_bend[SYNTH_NUM_TIMBRES];
+
 voice_params_t params[SYNTH_NUM_TIMBRES] = 
 {
+    {
+        .src = SRC_BC,
+        .bc_p.src = SRC_RR,
+        .rr_p.src = SRC_VCA0,
+        .vca_p[0].src = SRC_ADSR0,
+        .adsr_p[0][ADSR_TYPE_AMP].src = SRC_OSC0,
+        .osc_p[0].src = SRC_VCA1,
+        .vca_p[1].src = SRC_ADSR1,
+        .adsr_p[1][ADSR_TYPE_AMP].src = SRC_OSC1,
+        .osc_p[1].src = SRC_OSC1,
+        .rm_p.src[0] = SRC_RM,
+        .rm_p.src[1] = SRC_RM,
+        
+        .adsr_p[0 ... 1][0 ... 1].a = 1024,
+        .adsr_p[0 ... 1][0 ... 1].d = 32,
+        .adsr_p[0 ... 1][0 ... 1].s = 48800,
+        .adsr_p[0 ... 1][0 ... 1].r = 64,
+        .adsr_p[0 ... 1][0 ... 1].exp = 1,
+        .osc_p[0 ... 1].track_pitch = 1,
+        .vca_p[0 ... 1].gain = 65535,
+        .bc_p.mask = 0xffff,
+    },
     {
         .src = SRC_BC,
         .bc_p.src = SRC_RR,
@@ -52,27 +75,32 @@ inline void voice_note_off(uint8_t voice)
     v[voice].gate = 0;
 }
 
+inline void voice_handle_pitch_bend(uint8_t timbre, int16_t bend)
+{
+    pitch_bend[timbre] = bend;
+}
+
 inline void voice_process_params(uint8_t voice)
 {
     static bool prev_gate[SYNTH_NUM_VOICES] = {1};
 
     voice_t* x = &v[voice];
 
-    if(x->gate == prev_gate[voice])
-    return;
+    if(x->gate != prev_gate[voice])
+    {
+        if (x->gate)
+        {
+            voice_init(voice, x->timbre, 0);
+            adsr_trig_voice(voice);
+            sine_osc_trig_voice(voice, x->midi_note);
+        }
+        else
+        {
+            adsr_release_voice(voice);
+        }
+    }
 
     prev_gate[voice] = x->gate;
-
-    if (x->gate)
-    {
-        voice_attach_params(voice, x->timbre);
-        adsr_trig_voice(voice);
-        sine_osc_trig_voice(voice, x->midi_note);
-    }
-    else
-    {
-        adsr_release_voice(voice);
-    }
 
     for (int op = 0; op < SYNTH_OPERATORS_PER_VOICE; op++)
     {
@@ -80,7 +108,7 @@ inline void voice_process_params(uint8_t voice)
         {
             adsr_process_envelope(voice, op, adsr);
         }
-        sine_osc_process_params(voice, op);
+        sine_osc_process_params(voice, op, pitch_bend[x->timbre]);
     }
 }
 
@@ -90,6 +118,7 @@ inline int32_t voice_process_audio(uint8_t voice)
     {
         sine_osc_process(voice, op);
         vca_process(voice, op);
+        //adsr_process_envelope(voice, op, ADSR_TYPE_AMP);
         adsr_process_audio(voice, op);
     }
     bit_crusher_process_audio(voice);
@@ -164,6 +193,9 @@ enum cc_map
     CC_RATE_REDUCE_AMOUNT,
     CC_BIT_CRUSH_AMOUNT,
     CC_RING_MOD_ENABLE,
+
+    CC_PITCH_BEND_AMOUNT_OP_1,
+    CC_PITCH_BEND_AMOUNT_OP_2,
 };
 
 inline void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
@@ -172,6 +204,13 @@ inline void voice_handle_cc(uint8_t timbre, uint8_t controller, uint8_t value)
 
     switch (controller)
     {
+        case CC_PITCH_BEND_AMOUNT_OP_1:
+        sine_osc_params_set_pitch_bend_amount(&p->osc_p[0], value);
+        break;
+        case CC_PITCH_BEND_AMOUNT_OP_2:
+        sine_osc_params_set_pitch_bend_amount(&p->osc_p[1], value);
+        break;
+
         case CC_ATTACK_P_OP_1:
         case CC_DECAY_P_OP_1:
         case CC_SUSTAIN_P_OP_1:

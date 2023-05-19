@@ -83,7 +83,7 @@ int main(char argc, char** argv)
 
         uint out = (uint)temp;
         if (out >= 65536)
-        out = 65535;
+        out = 65534;
         
         fprintf(src_f, "%u, ", out);
     }

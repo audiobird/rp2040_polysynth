@@ -4,6 +4,9 @@
 #include <pico/stdio.h>
 #include "a_io.h"
 
+#define ADSR_SHIFT_VAL 5
+#define ADSR_TOP_ (1ul << (EXP_TABLE_SIZE_BITS + 0)) - 1
+
 typedef enum adsr_state
 {
     ADSR_OFF,
@@ -11,6 +14,7 @@ typedef enum adsr_state
     ADSR_DECAY,
     ADSR_SUSTAIN,
     ADSR_RELEASE,
+    ADSR_QUICK_RELEASE,
 } adsr_state_t;
 
 typedef enum adsr_midi_params
@@ -38,13 +42,7 @@ typedef struct adsr_params
     signal_src_t src;
 } adsr_params_t;
 
-typedef struct adsr
-{
-    adsr_params_t * params;
-    adsr_state_t state;
-    uint16_t out_val;
-    int32_t working_val;
-} adsr_t;
+
 
 void adsr_params_attach(uint8_t voice, uint8_t op, adsr_types_t type, adsr_params_t * params);
 

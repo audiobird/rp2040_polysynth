@@ -4,7 +4,19 @@
 #include "common.h"
 #include "a_io.h"
 
+static const int32_t ADSR_TOP = ADSR_TOP_; 
+
 static const signal_dst_t adsr_dst[SYNTH_OPERATORS_PER_VOICE] = {SRC_ADSR0, SRC_ADSR1};
+
+typedef struct adsr
+{
+    adsr_params_t * params;
+    adsr_state_t state;
+    int32_t out_val;
+    int32_t next_val;
+    int32_t inc_val;
+    int32_t working_val;
+} adsr_t;
 
 static adsr_t adsr[SYNTH_NUM_VOICES][SYNTH_OPERATORS_PER_VOICE][ADSR_TYPE_CNT];
 
@@ -55,19 +67,15 @@ inline void adsr_process_envelope(uint8_t voice, uint8_t op, adsr_types_t type)
 {
     adsr_t * x = &adsr[voice][op][type];
 
-    int temp = x->working_val;
-    int rate;
-
     switch (x->state)
     {
         case ADSR_ATTACK:
         {
-            rate = x->params->a;
-            temp += rate;
+            x->working_val += x->params->a;
 
-            if (temp > UINT16_MAX)
+            if (x->working_val > ADSR_TOP)
             {
-                temp = UINT16_MAX;
+                x->working_val = ADSR_TOP;
                 x->state = ADSR_DECAY;
             }
             
@@ -75,49 +83,58 @@ inline void adsr_process_envelope(uint8_t voice, uint8_t op, adsr_types_t type)
         }
         case ADSR_DECAY:
         {
-            rate = x->params->d;
-            temp -= rate;
+            x->working_val -= x->params->d;
 
-            if (temp < x->params->s)
+            if (x->working_val < x->params->s)
             {
-                temp = x->params->s;
+                x->working_val = x->params->s;
                 x->state = ADSR_SUSTAIN;
             }
             
             break;
         }
         case ADSR_SUSTAIN: 
-            temp = x->params->s; 
+            x->working_val = x->params->s; 
             break;
 
         case ADSR_RELEASE:
         {
-            temp -= x->params->r;
+            x->working_val -= x->params->r;
 
-            if (temp < 0)
+            if (x->working_val < 0)
             {
-                temp = 0;
+                x->working_val = 0;
                 x->state = ADSR_OFF;
             }
 
             break;
         }
+        case ADSR_QUICK_RELEASE:
+        x->working_val = 0;
+        x->state = ADSR_ATTACK;
+        break;
+
         case ADSR_OFF:
         break;
     }
 
-    x->working_val = temp;
+    x->out_val = x->next_val;
 
     if (x->params->exp)
-    x->out_val = exp_table[temp];
+    x->next_val = (exp_table[x->working_val]);
     else
-    x->out_val = temp;
+    x->next_val = (x->working_val);
+
+    x->inc_val = (x->next_val - x->out_val) >> ADSR_SHIFT_VAL;  
+
+    
 }
 
 inline void adsr_process_audio(uint8_t voice, uint8_t op)
 {
     audio_output_t x = audio_get_src_phase(voice, adsr[voice][op][ADSR_TYPE_AMP].params->src);
     x = multiply_and_scale(x, adsr[voice][op][ADSR_TYPE_AMP].out_val, 16);
+    adsr[voice][op][ADSR_TYPE_AMP].out_val += adsr[voice][op][ADSR_TYPE_AMP].inc_val;
     audio_set_dst_phase(voice, adsr_dst[op], x);
 }
 
@@ -148,8 +165,7 @@ inline void adsr_trig_voice(uint8_t voice)
         for (int type = 0; type < ADSR_TYPE_CNT; type++)
         {
             adsr_t * x = &adsr[voice][op][type];
-            x->working_val = 0;
-            x->state = ADSR_ATTACK;
+            x->state = ADSR_QUICK_RELEASE;
         }
     }
 }

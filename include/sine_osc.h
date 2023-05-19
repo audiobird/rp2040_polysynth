@@ -12,17 +12,20 @@ typedef struct sine_osc_params
     uint16_t mod_amount;
     bool track_pitch;
     signal_src_t src;
+    int8_t pitch_bend_amount;
 } sine_osc_params_t;
 
 void sine_osc_process(uint8_t voice, uint8_t op);
-void sine_osc_process_params(uint8_t voice, uint8_t op);
+void sine_osc_process_params(uint8_t voice, uint8_t op, int16_t bend);
 
 void sine_osc_params_set_octave_offset(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_transpose(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_fine_offset(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_mod_amount(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_params_set_pitch_tracking(sine_osc_params_t * p, int8_t m_val);
+void sine_osc_params_set_pitch_bend_amount(sine_osc_params_t * p, int8_t m_val);
 void sine_osc_trig_voice(uint8_t voice, int8_t mnote);
 
 void sine_osc_params_attach(uint8_t voice, uint8_t op, sine_osc_params_t * params);
+
 #endif
